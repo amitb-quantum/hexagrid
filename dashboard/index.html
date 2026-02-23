@@ -1,0 +1,3504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Energia — AI Data Center Energy Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:        #0a0e1a;
+    --bg2:       #0f1425;
+    --surface:   rgba(255,255,255,0.04);
+    --surface2:  rgba(255,255,255,0.07);
+    --border:    rgba(0,255,136,0.15);
+    --border2:   rgba(0,204,255,0.2);
+
+    --text:      #e8edf5;
+    --text2:     #a0aec0;
+    --muted:     #6b7a99;
+
+    --green:     #00ff88;
+    --green-dim: rgba(0,255,136,0.12);
+    --cyan:      #00ccff;
+    --cyan-dim:  rgba(0,204,255,0.12);
+    --amber:     #ffaa00;
+    --amber-dim: rgba(255,170,0,0.12);
+    --red:       #ff4444;
+    --red-dim:   rgba(255,68,68,0.12);
+    --purple:    #bf7fff;
+    --purple-dim:rgba(191,127,255,0.12);
+
+    --teal:      #00ccff;
+    --teal-dim:  rgba(0,204,255,0.12);
+
+    --glow-green: 0 0 20px rgba(0,255,136,0.25);
+    --glow-cyan:  0 0 20px rgba(0,204,255,0.25);
+    --shadow-card: 0 4px 24px rgba(0,0,0,0.4);
+
+    --font:      'Inter', system-ui, sans-serif;
+    --mono:      'JetBrains Mono', 'Courier New', monospace;
+    --radius:    12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: linear-gradient(135deg, #0a0e1a 0%, #0d1528 50%, #0a1020 100%);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    font-size: 15px;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
+  ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--green), var(--cyan)); border-radius: 3px; }
+
+  /* ── HEADER ── */
+  header {
+    background: rgba(10,14,26,0.92);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.5);
+  }
+
+  .header-inner {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 32px;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo { display: flex; align-items: center; gap: 14px; }
+  .logo-mark {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--green), var(--cyan));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 17px; color: #000;
+    letter-spacing: -1px;
+    box-shadow: var(--glow-green);
+  }
+  .logo-text {
+    font-size: 20px; font-weight: 700; letter-spacing: 3px;
+    background: linear-gradient(135deg, var(--green), var(--cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .logo-sub {
+    font-family: var(--font);
+    font-size: 14px; color: var(--cyan); letter-spacing: 0.5px;
+    font-weight: 400; margin-top: 3px; opacity: 0.85;
+  }
+
+  .header-right { display: flex; align-items: center; gap: 14px; }
+
+  .badge {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.5px;
+    padding: 6px 14px; border-radius: 20px;
+    display: flex; align-items: center; gap: 7px;
+    font-weight: 500; border: 1px solid;
+  }
+  .badge.online  { background: var(--green-dim); color: var(--green); border-color: rgba(0,255,136,0.3); }
+  .badge.warning { background: var(--amber-dim); color: var(--amber); border-color: rgba(255,170,0,0.3); }
+  .badge.offline { background: var(--red-dim);   color: var(--red);   border-color: rgba(255,68,68,0.3); }
+  .badge.teal    { background: var(--cyan-dim);  color: var(--cyan);  border-color: rgba(0,204,255,0.3); }
+  .badge .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: currentColor;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.3)} }
+
+  .clock {
+    font-family: var(--mono); font-size: 14px; color: var(--cyan);
+    background: var(--surface); padding: 6px 14px;
+    border-radius: var(--radius-sm); border: 1px solid var(--border2);
+    letter-spacing: 1px;
+  }
+
+  /* ── TABS ── */
+  .tabs-wrap {
+    background: rgba(10,14,26,0.85);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(8px);
+  }
+  .tabs-inner {
+    max-width: 1600px; margin: 0 auto;
+    padding: 0 32px;
+    display: flex; gap: 0;
+  }
+  .tab {
+    font-family: var(--font); font-size: 14px; font-weight: 500;
+    padding: 16px 22px; cursor: pointer;
+    color: var(--muted); border: none; background: none;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s; letter-spacing: 0.3px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .tab:hover  { color: var(--cyan); }
+  .tab.active { color: var(--green); border-bottom-color: var(--green); }
+  .tab i { font-size: 13px; }
+
+  /* ── PAGE WRAPPER ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .page-inner {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 28px 32px 60px;
+  }
+
+  /* ── GRID ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 18px;
+  }
+  .col-3  { grid-column: span 3; }
+  .col-2  { grid-column: span 2; }
+  .col-4  { grid-column: span 4; }
+  .col-6  { grid-column: span 6; }
+  .col-8  { grid-column: span 8; }
+  .col-12 { grid-column: span 12; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 26px;
+    box-shadow: var(--shadow-card);
+    transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+  }
+  .card:hover {
+    border-color: rgba(0,255,136,0.35);
+    box-shadow: var(--shadow-card), var(--glow-green);
+    transform: translateY(-2px);
+  }
+
+  .card-title {
+    font-size: 12px; font-weight: 600;
+    color: var(--muted); letter-spacing: 1.2px;
+    text-transform: uppercase; margin-bottom: 18px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .card-title i { color: var(--green); font-size: 14px; }
+  .card-title .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+  }
+
+  /* ── KPI ── */
+  .kpi-value {
+    font-family: var(--mono); font-size: 38px; font-weight: 600;
+    color: var(--text); line-height: 1; letter-spacing: -1.5px;
+  }
+  .kpi-value.teal, .kpi-value.cyan { color: var(--cyan); }
+  .kpi-value.green  { color: var(--green); }
+  .kpi-value.amber  { color: var(--amber); }
+  .kpi-unit {
+    font-family: var(--mono); font-size: 12px;
+    color: var(--muted); margin-top: 8px; letter-spacing: 0.5px;
+  }
+  .kpi-delta {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: var(--mono); font-size: 12px;
+    margin-top: 12px; padding: 4px 10px; border-radius: 6px;
+    font-weight: 500;
+  }
+  .kpi-delta.pos { background: var(--green-dim); color: var(--green); }
+  .kpi-delta.neg { background: var(--red-dim);   color: var(--red); }
+  .kpi-delta.neu { background: var(--surface2);  color: var(--muted); }
+
+  .kpi-block { display: flex; flex-direction: column; }
+  .kpi-label {
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 6px;
+  }
+  .kpi-sub {
+    font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 5px;
+  }
+
+  /* ── CHART ── */
+  .chart-wrap { position: relative; height: 180px; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    font-family: var(--font); font-size: 14px; font-weight: 600;
+    padding: 10px 22px; border-radius: var(--radius-sm);
+    cursor: pointer; border: none;
+    transition: all 0.2s; letter-spacing: 0.3px;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn i { font-size: 13px; }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--green), var(--cyan));
+    color: #000; font-weight: 700;
+    box-shadow: 0 4px 15px rgba(0,255,136,0.3);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(0,255,136,0.5);
+  }
+  .btn-secondary {
+    background: var(--surface2); color: var(--cyan);
+    border: 1px solid var(--border2);
+  }
+  .btn-secondary:hover {
+    background: var(--cyan-dim);
+    border-color: var(--cyan);
+    box-shadow: var(--glow-cyan);
+  }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+
+  /* ── FORM ELEMENTS ── */
+  .form-label {
+    display: block; font-size: 12px; font-weight: 600;
+    color: var(--muted); letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .form-input {
+    width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border2);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-family: var(--font); font-size: 14px; padding: 10px 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: none;
+  }
+  .form-input:focus {
+    outline: none; border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(0,255,136,0.12);
+  }
+  .form-input option { background: #0f1425; }
+
+  /* ── LOG ── */
+  .log-box {
+    background: rgba(0,0,0,0.4); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px;
+    height: 160px; overflow-y: auto; font-family: var(--mono);
+    font-size: 12px; line-height: 1.6;
+  }
+  .log-line { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .log-ts   { color: var(--muted); margin-right: 10px; }
+  .log-msg  { color: var(--text2); }
+  .log-msg.err { color: var(--red); }
+  .log-msg.ok  { color: var(--green); }
+  .log-msg.inf { color: var(--cyan); }
+
+  /* ── TABLE ── */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .data-table th {
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 8px 12px; text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table td {
+    padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05);
+    color: var(--text2); vertical-align: middle;
+  }
+  .data-table td:last-child { text-align: right; color: var(--cyan); font-family: var(--mono); }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--surface2); }
+
+  /* ── STATUS PILLS ── */
+  .pill {
+    display: inline-block; padding: 3px 10px; border-radius: 12px;
+    font-size: 11px; font-weight: 600; font-family: var(--mono);
+    letter-spacing: 0.5px;
+  }
+  .pill-green  { background: var(--green-dim); color: var(--green); }
+  .pill-cyan   { background: var(--cyan-dim);  color: var(--cyan); }
+  .pill-amber  { background: var(--amber-dim); color: var(--amber); }
+  .pill-red    { background: var(--red-dim);   color: var(--red); }
+  .pill-purple { background: var(--purple-dim);color: var(--purple); }
+
+  /* ── INFO GRID (power chain etc) ── */
+  .info-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 14px;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-row .label { color: var(--text2); display: flex; align-items: center; gap: 8px; }
+  .info-row .label i { color: var(--muted); font-size: 12px; width: 14px; }
+  .info-row .value { font-family: var(--mono); font-size: 14px; color: var(--green); font-weight: 500; }
+
+  /* ── SECTION DIVIDER ── */
+  .section-head {
+    font-size: 13px; font-weight: 700; color: var(--cyan);
+    letter-spacing: 2px; text-transform: uppercase;
+    padding: 6px 0 14px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .section-head i { color: var(--green); }
+  .section-head::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+    margin-left: 12px;
+  }
+
+  /* ── GANTT ── */
+  .gantt-wrap { overflow-x: auto; }
+  .gantt-bar {
+    display: inline-block; height: 22px; border-radius: 4px;
+    background: linear-gradient(90deg, var(--green), var(--cyan));
+    opacity: 0.85; margin: 2px 0;
+    box-shadow: 0 0 8px rgba(0,255,136,0.3);
+  }
+
+  /* ── REPORTS GALLERY ── */
+  .report-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+    transition: all 0.25s;
+  }
+  .report-card:hover {
+    border-color: rgba(0,255,136,0.4);
+    box-shadow: var(--glow-green);
+    transform: translateY(-3px);
+  }
+  .report-card img { width: 100%; display: block; cursor: pointer; }
+  .report-card .report-meta {
+    padding: 12px 14px; font-size: 12px;
+    color: var(--muted); font-family: var(--mono);
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── PULSE (active training) ── */
+  .pulse { animation: pulse 2s ease-in-out infinite; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-track {
+    background: rgba(255,255,255,0.08); border-radius: 4px;
+    height: 8px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 4px;
+    background: linear-gradient(90deg, var(--green), var(--cyan));
+    transition: width 0.8s ease;
+  }
+
+  /* ── JOB QUEUE ── */
+  .job-item {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 16px;
+    margin-bottom: 10px; display: flex; align-items: center;
+    justify-content: space-between; transition: all 0.2s;
+  }
+  .job-item:hover { border-color: rgba(0,255,136,0.3); }
+  .job-name { font-weight: 600; font-size: 14px; color: var(--text); }
+  .job-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+  /* ── RL RECOMMENDATION CARDS ── */
+  .rec-action {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 16px; text-align: center;
+    transition: all 0.2s;
+  }
+  .rec-action:hover { border-color: var(--green); box-shadow: var(--glow-green); }
+  .rec-action-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .rec-action-value { font-size: 15px; font-weight: 700; color: var(--green); }
+
+  .reasoning-box {
+    background: rgba(0,255,136,0.05); border-left: 3px solid var(--green);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 12px 16px; margin-bottom: 14px;
+  }
+  .reasoning-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+  .reasoning-text { font-size: 14px; color: var(--text2); line-height: 1.6; }
+
+  /* ── HELP BUTTON ── */
+  .help-btn {
+    font-family: var(--font); font-size: 14px; font-weight: 600;
+    padding: 8px 18px; border-radius: var(--radius-sm);
+    background: rgba(0,255,136,0.08); color: var(--green);
+    border: 1px solid rgba(0,255,136,0.3); cursor: pointer;
+    display: flex; align-items: center; gap: 7px;
+    transition: all 0.2s;
+  }
+  .help-btn:hover { background: rgba(0,255,136,0.18); box-shadow: 0 0 16px rgba(0,255,136,0.2); }
+
+  /* ── HELP DRAWER TABS ── */
+  .help-tab-btn {
+    font-family: var(--font); font-size: 12px; font-weight: 500;
+    padding: 6px 12px; border-radius: 6px; cursor: pointer;
+    background: var(--surface); color: var(--muted);
+    border: 1px solid var(--border); transition: all 0.18s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .help-tab-btn:hover { color: var(--cyan); border-color: var(--border2); }
+  .help-tab-btn.active { background: var(--green-dim); color: var(--green); border-color: rgba(0,255,136,0.35); }
+
+  /* ── HELP CONTENT STYLES ── */
+  .help-section { margin-bottom: 28px; }
+  .help-section h3 {
+    font-size: 15px; font-weight: 700; color: var(--cyan);
+    margin-bottom: 10px; display: flex; align-items: center; gap: 9px;
+  }
+  .help-section h3 i { color: var(--green); font-size: 14px; }
+  .help-section p { font-size: 14px; color: var(--text2); line-height: 1.75; margin-bottom: 10px; }
+  .help-metric {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--green); border-radius: 0 8px 8px 0;
+    padding: 12px 16px; margin-bottom: 10px;
+  }
+  .help-metric .hm-name { font-size: 13px; font-weight: 700; color: var(--green); margin-bottom: 4px; font-family: var(--mono); }
+  .help-metric .hm-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+  .help-tip {
+    background: rgba(0,204,255,0.07); border: 1px solid rgba(0,204,255,0.2);
+    border-radius: 8px; padding: 12px 16px; margin-top: 14px;
+    font-size: 13px; color: var(--text2); line-height: 1.7;
+  }
+  .help-tip strong { color: var(--cyan); }
+  .help-divider { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 20px 0; }
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-mark">⚡</div>
+      <div>
+        <div class="logo-text">ENERGIA</div>
+        <div class="logo-sub">AI Data Center Energy Intelligence</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="badge online" id="api-status">
+        <div class="dot"></div>
+        <span id="api-status-text">Connecting...</span>
+      </div>
+      <div class="badge teal" id="gpu-pill">
+        <div class="dot"></div>
+        <span id="gpu-text">GPU</span>
+      </div>
+      <div class="clock" id="clock">--:--:--</div>
+      <button class="help-btn" onclick="toggleHelp()" title="Help &amp; Documentation">
+        <i class="fa-solid fa-circle-question"></i> Help
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ══ HELP DRAWER ══ -->
+<div id="help-overlay" onclick="closeHelp()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;backdrop-filter:blur(4px)"></div>
+<div id="help-drawer" style="display:none;position:fixed;top:0;right:0;width:480px;height:100vh;z-index:1000;background:linear-gradient(180deg,#0f1528 0%,#0a1020 100%);border-left:1px solid rgba(0,255,136,0.25);overflow-y:auto;box-shadow:-8px 0 40px rgba(0,0,0,0.6)">
+  <div style="padding:28px 32px 0;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(0,255,136,0.15);padding-bottom:20px;margin-bottom:0">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="background:linear-gradient(135deg,#00ff88,#00ccff);border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#000;font-weight:800">⚡</div>
+      <div>
+        <div style="font-size:17px;font-weight:700;background:linear-gradient(135deg,#00ff88,#00ccff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Energia Help</div>
+        <div id="help-tab-label" style="font-size:12px;color:var(--muted);margin-top:2px">Select a tab for contextual help</div>
+      </div>
+    </div>
+    <button onclick="closeHelp()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:4px;transition:color 0.2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'">✕</button>
+  </div>
+
+  <!-- Tab selector inside drawer -->
+  <div style="display:flex;gap:6px;padding:16px 32px;border-bottom:1px solid rgba(255,255,255,0.06);flex-wrap:wrap">
+    <button class="help-tab-btn active" onclick="showHelpTab('overview',this)"><i class="fa-solid fa-gauge-high"></i> Overview</button>
+    <button class="help-tab-btn" onclick="showHelpTab('simulation',this)"><i class="fa-solid fa-cubes"></i> Digital Twin</button>
+    <button class="help-tab-btn" onclick="showHelpTab('scheduler',this)"><i class="fa-solid fa-atom"></i> Scheduler</button>
+    <button class="help-tab-btn" onclick="showHelpTab('reports',this)"><i class="fa-solid fa-chart-bar"></i> Reports</button>
+    <button class="help-tab-btn" onclick="showHelpTab('rl',this)"><i class="fa-solid fa-robot"></i> RL Agent</button>
+    <button class="help-tab-btn" onclick="showHelpTab('carbon',this)"><i class="fa-solid fa-leaf"></i> Carbon</button>
+    <button class="help-tab-btn" onclick="showHelpTab('fleet',this)"><i class="fa-solid fa-network-wired"></i> Fleet</button>
+    <button class="help-tab-btn" onclick="showHelpTab('hardware',this)"><i class="fa-solid fa-microchip"></i> Hardware</button>
+  </div>
+
+  <div id="help-content" style="padding:28px 32px"></div>
+</div>
+
+<!-- ══ TABS ══ -->
+<div class="tabs-wrap">
+  <div class="tabs-inner">
+    <button class="tab active" onclick="switchTab('overview', this)"><i class="fa-solid fa-gauge-high"></i>Overview</button>
+    <button class="tab" onclick="switchTab('simulation', this)"><i class="fa-solid fa-cubes"></i>Digital Twin</button>
+    <button class="tab" onclick="switchTab('scheduler', this)"><i class="fa-solid fa-atom"></i>Scheduler</button>
+    <button class="tab" onclick="switchTab('reports', this)"><i class="fa-solid fa-chart-bar"></i>Reports</button>
+    <button class="tab" onclick="switchTab('rl', this)"><i class="fa-solid fa-robot"></i>RL Agent</button>
+    <button class="tab" onclick="switchTab('carbon', this)"><i class="fa-solid fa-leaf"></i>Carbon</button>
+    <button class="tab" onclick="switchTab('fleet', this)"><i class="fa-solid fa-network-wired"></i>Fleet</button>
+    <button class="tab" onclick="switchTab('hardware', this)"><i class="fa-solid fa-microchip"></i>Hardware</button>
+  </div>
+</div>
+
+<!-- ══ OVERVIEW ══ -->
+<div class="page active" id="page-overview">
+<div class="page-inner">
+<div class="grid">
+
+  <!-- KPI: Grid Price -->
+  <div class="card col-3">
+    <div class="card-title"><i class="fa-solid fa-bolt"></i>Grid Price Now</div>
+    <div class="kpi-value cyan" id="kpi-price">—</div>
+    <div class="kpi-unit">$/kWh &nbsp;·&nbsp; CAISO-TOU</div>
+    <div class="kpi-delta neu" id="kpi-price-delta">loading...</div>
+  </div>
+
+  <!-- KPI: Cheapest Slot -->
+  <div class="card col-3">
+    <div class="card-title"><i class="fa-solid fa-tag"></i>Cheapest Slot (2hr)</div>
+    <div class="kpi-value green" id="kpi-cheap">—</div>
+    <div class="kpi-unit">$/kWh</div>
+    <div class="kpi-delta neu" id="kpi-cheap-delta">loading...</div>
+  </div>
+
+  <!-- KPI: GPU -->
+  <div class="card col-3">
+    <div class="card-title"><i class="fa-solid fa-microchip"></i>GPU Accelerator</div>
+    <div class="kpi-value" style="font-size:16px;line-height:1.5;color:var(--cyan)" id="kpi-gpu-name">—</div>
+    <div class="kpi-unit" id="kpi-gpu-mem">—</div>
+    <div class="kpi-delta neu" id="kpi-gpu-status">—</div>
+  </div>
+
+  <!-- KPI: Engines -->
+  <div class="card col-3">
+    <div class="card-title"><i class="fa-solid fa-server"></i>Engine Status</div>
+    <table class="data-table">
+      <tr><td><i class="fa-solid fa-circle-nodes" style="color:var(--muted);margin-right:8px"></i>Digital Twin</td><td id="eng-twin">—</td></tr>
+      <tr><td><i class="fa-solid fa-brain" style="color:var(--muted);margin-right:8px"></i>LSTM Forecaster</td><td id="eng-fore">—</td></tr>
+      <tr><td><i class="fa-solid fa-atom" style="color:var(--muted);margin-right:8px"></i>QAOA Scheduler</td><td id="eng-sched">—</td></tr>
+    </table>
+  </div>
+
+  <!-- Price Curve Chart -->
+  <div class="card col-8">
+    <div class="card-title"><i class="fa-solid fa-chart-line"></i>Price Forecast — Next 120 Minutes</div>
+    <div class="chart-wrap">
+      <canvas id="chart-price"></canvas>
+    </div>
+  </div>
+
+  <!-- Carbon KPI: Local Grid -->
+  <div class="card col-2">
+    <div class="card-title"><i class="fa-solid fa-leaf"></i>Grid Carbon Now</div>
+    <div class="kpi-value" id="kpi-carbon-val" style="font-size:30px;color:var(--green)">—</div>
+    <div class="kpi-unit">gCO₂eq/kWh · CAISO</div>
+    <div class="kpi-delta neu" id="kpi-carbon-label" style="margin-top:10px">loading...</div>
+  </div>
+
+  <!-- Carbon KPI: Cleanest Zone -->
+  <div class="card col-2">
+    <div class="card-title"><i class="fa-solid fa-wind"></i>Cleanest Zone</div>
+    <div class="kpi-value green" id="kpi-cleanest-val" style="font-size:22px;line-height:1.4">—</div>
+    <div class="kpi-unit" id="kpi-cleanest-ci">— gCO₂eq/kWh</div>
+    <div class="kpi-delta neu" id="kpi-cleanest-label" style="margin-top:10px">loading...</div>
+  </div>
+
+  <!-- Power Chain -->
+  <div class="card col-4">
+    <div class="card-title"><i class="fa-solid fa-plug-circle-bolt"></i>Live Power Chain</div>
+    <div class="info-row"><span class="label"><i class="fa-solid fa-server"></i>IT Load</span><span class="value" id="pw-it">—</span></div>
+    <div class="info-row"><span class="label"><i class="fa-solid fa-snowflake"></i>Cooling</span><span class="value" id="pw-cool">—</span></div>
+    <div class="info-row"><span class="label"><i class="fa-solid fa-battery-three-quarters"></i>UPS Loss</span><span class="value" id="pw-ups">—</span></div>
+    <div class="info-row"><span class="label"><i class="fa-solid fa-tower-broadcast"></i>Grid Draw</span><span class="value" id="pw-grid">—</span></div>
+    <div class="info-row"><span class="label"><i class="fa-solid fa-gauge"></i>PUE</span><span class="value" id="pw-pue">—</span></div>
+    <div class="info-row"><span class="label"><i class="fa-solid fa-dollar-sign"></i>Cost Rate</span><span class="value" id="pw-cost">—</span></div>
+  </div>
+
+  <!-- Job Queue -->
+  <div class="card col-6">
+    <div class="card-title"><i class="fa-solid fa-list-check"></i>Active Job Queue</div>
+    <div id="jobs-list"><div style="color:var(--muted);font-size:14px;padding:16px 0">Loading job queue...</div></div>
+  </div>
+
+  <!-- Forecast Mini -->
+  <div class="card col-6">
+    <div class="card-title"><i class="fa-solid fa-wave-square"></i>Demand Forecast</div>
+    <div class="chart-wrap" style="height:160px">
+      <canvas id="chart-forecast"></canvas>
+    </div>
+  </div>
+
+</div>
+</div>
+</div>
+
+<!-- ══ SIMULATION (DIGITAL TWIN) ══ -->
+<div class="page" id="page-simulation">
+<div class="page-inner">
+<div class="grid">
+
+  <div class="card col-4">
+    <div class="card-title"><i class="fa-solid fa-sliders"></i>Digital Twin Configuration</div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div><label class="form-label">Simulation Mode</label>
+        <select id="sim-mode" class="form-input">
+          <option value="standard">Standard TOU Pricing</option>
+          <option value="heron">Project HERON (Quantum-Enhanced)</option>
+        </select>
+      </div>
+      <div><label class="form-label">GPU Rack Count</label>
+        <select id="sim-racks" class="form-input">
+          <option value="2">2 Racks</option>
+          <option value="4" selected>4 Racks</option>
+          <option value="8">8 Racks</option>
+          <option value="16">16 Racks</option>
+        </select>
+      </div>
+      <div><label class="form-label">Simulation Duration</label>
+        <select id="sim-duration" class="form-input">
+          <option value="60">1 Hour</option>
+          <option value="240">4 Hours</option>
+          <option value="480" selected>8 Hours (Shift)</option>
+          <option value="1440">24 Hours (Full Day)</option>
+        </select>
+      </div>
+      <div><label class="form-label">Workload Mix</label>
+        <select id="sim-workload" class="form-input">
+          <option value="balanced" selected>Balanced (Mixed AI)</option>
+          <option value="inference">Inference Heavy</option>
+          <option value="training">Training Heavy</option>
+          <option value="batch">Batch Processing</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="sim-run-btn" onclick="runSimulation()"><i class="fa-solid fa-play"></i>Run Simulation</button>
+      <button class="btn btn-secondary" onclick="runSimulation('heron')"><i class="fa-solid fa-atom"></i>Run HERON Mode</button>
+    </div>
+    <div style="margin-top:20px">
+      <div class="card-title" style="margin-bottom:10px"><i class="fa-solid fa-terminal"></i>Simulation Log</div>
+      <div class="log-box" id="sim-log"></div>
+    </div>
+  </div>
+
+  <div class="card col-8" id="sim-results-std" style="display:none">
+    <div class="card-title"><i class="fa-solid fa-chart-area"></i>Standard Mode Results</div>
+    <table class="data-table" id="sim-table-std"></table>
+    <div class="chart-wrap" style="margin-top:16px;height:220px">
+      <canvas id="chart-sim-std"></canvas>
+    </div>
+  </div>
+
+  <div class="card col-8" id="sim-results-heron" style="display:none">
+    <div class="card-title"><i class="fa-solid fa-atom"></i>HERON Mode Results</div>
+    <table class="data-table" id="sim-table-heron"></table>
+    <div class="chart-wrap" style="margin-top:16px;height:220px">
+      <canvas id="chart-sim-heron"></canvas>
+    </div>
+  </div>
+
+  <div class="card col-12" id="sim-results-delta" style="display:none">
+    <div class="card-title"><i class="fa-solid fa-arrow-trend-up"></i>Standard vs HERON — Comparative Analysis</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;padding:8px 0" id="sim-delta-kpis"></div>
+    <div class="chart-wrap" style="margin-top:16px;height:200px">
+      <canvas id="chart-sim-delta"></canvas>
+    </div>
+  </div>
+
+</div>
+</div>
+</div>
+
+<!-- ══ SCHEDULER ══ -->
+<div class="page" id="page-scheduler">
+<div class="page-inner">
+<div class="grid">
+
+  <div class="card col-4">
+    <div class="card-title"><i class="fa-solid fa-atom"></i>Workload Scheduler Configuration</div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div><label class="form-label">Scheduling Algorithm</label>
+        <select id="sched-algo" class="form-input">
+          <option value="qaoa">QAOA (Quantum-Classical Hybrid)</option>
+          <option value="greedy">Greedy Baseline</option>
+          <option value="both" selected>Both (Compare)</option>
+        </select>
+      </div>
+      <div><label class="form-label">Job Queue Size</label>
+        <select id="sched-jobs" class="form-input">
+          <option value="4">4 Jobs</option>
+          <option value="6" selected>6 Jobs</option>
+          <option value="8">8 Jobs</option>
+          <option value="10">10 Jobs</option>
+        </select>
+      </div>
+      <div><label class="form-label">Time Slots (Horizon)</label>
+        <select id="sched-slots" class="form-input">
+          <option value="6">6 Slots (30 min)</option>
+          <option value="12" selected>12 Slots (1 hr)</option>
+          <option value="24">24 Slots (2 hr)</option>
+        </select>
+      </div>
+      <div><label class="form-label">QAOA Circuit Depth</label>
+        <select id="sched-depth" class="form-input">
+          <option value="1">p=1 (Fast)</option>
+          <option value="2" selected>p=2 (Balanced)</option>
+          <option value="3">p=3 (Deep)</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="sched-run-btn" onclick="runScheduler()"><i class="fa-solid fa-play"></i>Schedule Jobs</button>
+    </div>
+    <div style="margin-top:20px">
+      <div class="card-title" style="margin-bottom:10px"><i class="fa-solid fa-terminal"></i>Scheduler Log</div>
+      <div class="log-box" id="sched-log"></div>
+    </div>
+    <div class="card-title" style="margin-top:20px;margin-bottom:10px"><i class="fa-solid fa-circle-info"></i>Status</div>
+    <div class="log-box" style="height:60px;display:flex;align-items:center" id="sched-status">
+      Ready. Default AI workload mix: LLM, Diffusion, RL, Inference, Embedding.
+    </div>
+  </div>
+
+  <div class="card col-8" id="sched-gantt-panel" style="display:none">
+    <div class="card-title"><i class="fa-solid fa-bars-progress"></i>Schedule Gantt Chart</div>
+    <div style="margin-bottom:12px;display:flex;gap:16px">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px">
+        <span style="display:inline-block;width:14px;height:8px;background:linear-gradient(90deg,var(--green),var(--cyan));border-radius:2px"></span>QAOA
+      </div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px">
+        <span style="display:inline-block;width:14px;height:8px;background:var(--amber);border-radius:2px;opacity:0.7"></span>Greedy
+      </div>
+    </div>
+    <div id="sched-gantt" class="gantt-wrap"></div>
+  </div>
+
+  <div class="card col-4" id="sched-summary-panel" style="display:none">
+    <div class="card-title"><i class="fa-solid fa-trophy"></i>Cost Comparison</div>
+    <div id="sched-cost-compare"></div>
+  </div>
+
+  <div class="card col-12" id="sched-quantum-panel" style="display:none">
+    <div class="card-title"><i class="fa-solid fa-atom"></i>Quantum Circuit Metrics</div>
+    <div id="sched-quantum-info" style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;padding:8px 0"></div>
+  </div>
+
+</div>
+</div>
+</div>
+
+<!-- ══ REPORTS ══ -->
+<div class="page" id="page-reports">
+<div class="page-inner">
+<div class="grid">
+
+  <div class="card col-12">
+    <div class="card-title"><i class="fa-solid fa-chart-bar"></i>Generated Reports</div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="loadReports()"><i class="fa-solid fa-rotate"></i>Refresh Reports</button>
+    </div>
+    <div id="reports-grid" style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px"></div>
+  </div>
+
+</div>
+</div>
+</div>
+
+<!-- ══ RL AGENT ══ -->
+<div class="page" id="page-rl">
+<div class="page-inner">
+<div class="grid">
+
+  <!-- Agent Status Banner -->
+  <div class="card col-12">
+    <div class="card-title"><i class="fa-solid fa-robot"></i>Phase 7 — Reinforcement Learning Agent</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;padding:8px 0" id="rl-kpi-row">
+      <div class="kpi-block"><div class="kpi-label">Agent Status</div><div class="kpi-value" id="rl-status-val" style="font-size:22px">—</div><div class="kpi-sub" id="rl-status-sub">checking...</div></div>
+      <div class="kpi-block"><div class="kpi-label">Episodes Trained</div><div class="kpi-value" id="rl-episodes-val" style="font-size:22px">—</div><div class="kpi-sub" id="rl-timesteps-sub">0 timesteps</div></div>
+      <div class="kpi-block"><div class="kpi-label">Mean Reward</div><div class="kpi-value green" id="rl-reward-val" style="font-size:22px">—</div><div class="kpi-sub">last 100 eps</div></div>
+      <div class="kpi-block"><div class="kpi-label">Cost Savings vs Naive</div><div class="kpi-value green" id="rl-savings-val" style="font-size:22px">—</div><div class="kpi-sub">vs always-dispatch</div></div>
+      <div class="kpi-block"><div class="kpi-label">Training Time</div><div class="kpi-value cyan" id="rl-time-val" style="font-size:22px">—</div><div class="kpi-sub" id="rl-device-sub">device: —</div></div>
+    </div>
+  </div>
+
+  <!-- Train Controls -->
+  <div class="card col-4">
+    <div class="card-title"><i class="fa-solid fa-graduation-cap"></i>Train New Agent</div>
+    <div style="display:flex;flex-direction:column;gap:14px;margin-top:4px">
+      <div><label class="form-label">Training Steps</label>
+        <select id="rl-steps-sel" class="form-input">
+          <option value="5000">5,000 — Quick smoke test (~30s)</option>
+          <option value="50000">50,000 — Fast trial (~3 min)</option>
+          <option value="200000" selected>200,000 — Standard (~15 min)</option>
+          <option value="500000">500,000 — Full quality (~45 min)</option>
+        </select>
+      </div>
+      <div><label class="form-label">Parallel Environments</label>
+        <select id="rl-envs-sel" class="form-input">
+          <option value="1">1 — Single (safe, slower)</option>
+          <option value="4" selected>4 — Balanced</option>
+          <option value="8">8 — Fast (more RAM)</option>
+        </select>
+      </div>
+      <div><label class="form-label">GPU Racks per Env</label>
+        <select id="rl-racks-sel" class="form-input">
+          <option value="2">2 racks</option>
+          <option value="4" selected>4 racks</option>
+          <option value="8">8 racks</option>
+        </select>
+      </div>
+      <div><label class="form-label">Run Name</label>
+        <input id="rl-run-name" class="form-input" type="text" value="run_001" placeholder="run_001">
+      </div>
+      <button class="btn btn-primary" id="rl-train-btn" onclick="launchTraining()"><i class="fa-solid fa-play"></i>Launch Training</button>
+    </div>
+    <!-- Training Progress -->
+    <div id="rl-progress-block" style="display:none;margin-top:20px">
+      <div class="card-title" style="margin:0 0 10px 0"><i class="fa-solid fa-spinner fa-spin"></i>Training in Progress</div>
+      <div class="progress-track" style="margin-bottom:10px">
+        <div id="rl-progress-bar" class="progress-fill" style="width:0%"></div>
+      </div>
+      <div id="rl-progress-text" style="font-family:var(--mono);font-size:12px;color:var(--muted)">Initializing...</div>
+    </div>
+    <div style="margin-top:20px">
+      <div class="card-title" style="margin-bottom:10px"><i class="fa-solid fa-terminal"></i>Training Log</div>
+      <div id="rl-train-log" class="log-box"></div>
+    </div>
+  </div>
+
+  <!-- Training Curves -->
+  <div class="card col-8">
+    <div class="card-title"><i class="fa-solid fa-chart-line"></i>Training Curves</div>
+    <div style="position:relative;height:160px;margin-bottom:16px">
+      <canvas id="rl-reward-chart"></canvas>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-family:var(--mono);letter-spacing:1px;text-transform:uppercase">Cost Savings % vs Naive Dispatch</div>
+        <div style="position:relative;height:100px">
+          <canvas id="rl-savings-chart"></canvas>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-family:var(--mono);letter-spacing:1px;text-transform:uppercase">Training History</div>
+        <div id="rl-history-card" style="display:none">
+          <table class="data-table" style="font-size:12px" id="rl-history-table">
+            <thead><tr><th>Episodes</th><th>Reward</th><th>Savings</th><th>Status</th></tr></thead>
+            <tbody id="rl-history-body"></tbody>
+          </table>
+        </div>
+        <div id="rl-history-placeholder" style="color:var(--muted);font-size:13px;padding:20px 0">Train a model to see history.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Recommendation -->
+  <div class="card col-6">
+    <div class="card-title"><i class="fa-solid fa-bolt"></i>Live Agent Recommendation</div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="getLiveRecommendation()"><i class="fa-solid fa-bolt"></i>Get Recommendation</button>
+      <button class="btn btn-secondary" onclick="startAutoRecommend()" id="rl-auto-btn"><i class="fa-solid fa-rotate"></i>Auto (30s)</button>
+    </div>
+    <div id="rl-rec-block" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px">
+        <div class="rec-action"><div class="rec-action-label">Job Dispatch</div><div class="rec-action-value" id="rl-rec-dispatch">—</div></div>
+        <div class="rec-action"><div class="rec-action-label">Cooling</div><div class="rec-action-value" id="rl-rec-cooling">—</div></div>
+        <div class="rec-action"><div class="rec-action-label">UPS Mode</div><div class="rec-action-value" id="rl-rec-ups">—</div></div>
+      </div>
+      <div class="reasoning-box">
+        <div class="reasoning-label">Agent Reasoning</div>
+        <div class="reasoning-text" id="rl-rec-reasoning">—</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="kpi-block"><div class="kpi-label">Est. Savings vs Naive</div><div class="kpi-value green" id="rl-rec-savings" style="font-size:24px">—</div></div>
+        <div class="kpi-block"><div class="kpi-label">Confidence</div><div class="kpi-value cyan" id="rl-rec-conf" style="font-size:24px">—</div></div>
+      </div>
+    </div>
+    <div id="rl-rec-not-ready" style="color:var(--muted);font-size:14px;padding:20px 0;line-height:1.7">
+      Train a model first, then click <strong style="color:var(--green)">Get Recommendation</strong> to see live agent decisions.
+    </div>
+  </div>
+
+  <!-- How It Works -->
+  <div class="card col-6">
+    <div class="card-title"><i class="fa-solid fa-circle-info"></i>How the RL Agent Works</div>
+    <div style="font-size:14px;color:var(--text2);line-height:1.8;margin-bottom:16px">
+      The PPO agent observes a <strong style="color:var(--cyan)">26-dimensional state vector</strong> every 5 minutes and outputs three simultaneous control decisions:
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+      <div style="background:var(--surface2);border-left:3px solid var(--green);border-radius:0 8px 8px 0;padding:12px 16px">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Dispatch</div>
+        <div style="font-size:14px;color:var(--text)">Hold &nbsp;/&nbsp; Dispatch Now &nbsp;/&nbsp; Defer 15 min</div>
+      </div>
+      <div style="background:var(--surface2);border-left:3px solid var(--cyan);border-radius:0 8px 8px 0;padding:12px 16px">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Cooling</div>
+        <div style="font-size:14px;color:var(--text)">Reduce −10% &nbsp;/&nbsp; Maintain &nbsp;/&nbsp; Boost +10%</div>
+      </div>
+      <div style="background:var(--surface2);border-left:3px solid var(--amber);border-radius:0 8px 8px 0;padding:12px 16px">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">UPS</div>
+        <div style="font-size:14px;color:var(--text)">Charge (buy cheap) &nbsp;/&nbsp; Idle &nbsp;/&nbsp; Discharge (avoid peak)</div>
+      </div>
+    </div>
+    <div style="background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.2);border-radius:8px;padding:14px;font-size:13px;color:var(--text2);line-height:1.7">
+      <strong style="color:var(--green)">Reward signal:</strong> cost savings vs always-dispatch naive baseline, minus SLA breach penalty and cooling mismatch penalty. The agent learns to time workloads to cheap grid windows while keeping jobs on-schedule.
+    </div>
+    <div id="rl-action-desc" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Last Recommendation Detail</div>
+      <div id="rl-desc-dispatch" style="font-size:13px;color:var(--text2);margin-bottom:5px"></div>
+      <div id="rl-desc-cooling"  style="font-size:13px;color:var(--text2);margin-bottom:5px"></div>
+      <div id="rl-desc-ups"      style="font-size:13px;color:var(--text2)"></div>
+    </div>
+  </div>
+
+</div>
+</div>
+</div>
+<!-- end page-rl -->
+
+<!-- ══ CARBON ══ -->
+<div class="page" id="page-carbon">
+<div class="page-inner">
+<div class="grid">
+
+  <!-- Zone Cards Row -->
+  <div class="col-12">
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px" id="carbon-zone-cards">
+      <!-- populated by JS -->
+      <div style="color:var(--muted);font-size:14px;padding:24px 0;grid-column:span 5">Loading carbon data...</div>
+    </div>
+  </div>
+
+  <!-- Pareto Chart -->
+  <div class="card col-6">
+    <div class="card-title"><i class="fa-solid fa-chart-scatter"></i>Cost vs Carbon Pareto Analysis</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6">
+      Each dot is a grid region. <span style="color:var(--green)">●</span> = on Pareto frontier (optimal trade-off).
+      Drag the slider to shift your weighting.
+    </div>
+    <div style="position:relative;height:240px">
+      <canvas id="carbon-pareto-chart"></canvas>
+    </div>
+    <div style="margin-top:16px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;font-family:var(--mono)">
+        <span>💰 Cost only</span>
+        <span id="carbon-weight-label">50% / 50%</span>
+        <span>🌱 Carbon only</span>
+      </div>
+      <input type="range" id="carbon-weight-slider" min="0" max="100" value="50"
+             style="width:100%;accent-color:var(--green);cursor:pointer"
+             oninput="onCarbonWeightChange(this.value)">
+    </div>
+  </div>
+
+  <!-- Carbon-Aware Recommendation -->
+  <div class="card col-6">
+    <div class="card-title"><i class="fa-solid fa-bolt"></i>Carbon-Aware Dispatch Recommendation</div>
+    <div id="carbon-rec-block">
+      <div style="color:var(--muted);font-size:14px;padding:20px 0">Loading recommendation...</div>
+    </div>
+  </div>
+
+  <!-- 24-Hour History Chart -->
+  <div class="card col-8">
+    <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i>24-Hour Carbon Intensity History</div>
+    <div style="margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:12px;color:var(--muted);font-family:var(--mono)">Zone:</span>
+      <select id="carbon-history-iso" class="form-input" style="width:auto;font-size:13px;padding:6px 12px"
+              onchange="loadCarbonHistory(this.value)">
+        <option value="CAISO">California (CAISO)</option>
+        <option value="ERCOT">Texas (ERCOT)</option>
+        <option value="NYISO">New York (NYISO)</option>
+        <option value="ISONE">New England (ISONE)</option>
+        <option value="PJM">Mid-Atlantic (PJM)</option>
+      </select>
+      <div id="carbon-history-status" style="font-size:12px;color:var(--muted);font-family:var(--mono)"></div>
+    </div>
+    <div style="position:relative;height:200px">
+      <canvas id="carbon-history-chart"></canvas>
+    </div>
+    <div style="display:flex;gap:20px;margin-top:12px;flex-wrap:wrap" id="carbon-history-stats"></div>
+  </div>
+
+  <!-- Fuel Mix -->
+  <div class="card col-4">
+    <div class="card-title"><i class="fa-solid fa-fire-flame-curved"></i>Fuel Mix — <span id="carbon-mix-iso">CAISO</span></div>
+    <div id="carbon-fuel-mix">
+      <div style="color:var(--muted);font-size:14px;padding:20px 0">Loading fuel mix...</div>
+    </div>
+  </div>
+
+  <!-- Thresholds Reference -->
+  <div class="card col-12">
+    <div class="card-title"><i class="fa-solid fa-scale-balanced"></i>Carbon Intensity Reference — gCO₂eq/kWh</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px">
+      <div style="background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);border-radius:10px;padding:16px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:#00ff88;font-family:var(--mono)">&lt; 50</div>
+        <div style="font-size:13px;color:#00ff88;margin-top:4px;font-weight:600">Very Clean</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">Mostly renewables — hydro, wind, solar, nuclear</div>
+      </div>
+      <div style="background:rgba(68,221,136,0.08);border:1px solid rgba(68,221,136,0.25);border-radius:10px;padding:16px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:#44dd88;font-family:var(--mono)">50–150</div>
+        <div style="font-size:13px;color:#44dd88;margin-top:4px;font-weight:600">Clean</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">Low carbon — nuclear + renewables dominant</div>
+      </div>
+      <div style="background:rgba(255,170,0,0.08);border:1px solid rgba(255,170,0,0.25);border-radius:10px;padding:16px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:#ffaa00;font-family:var(--mono)">150–300</div>
+        <div style="font-size:13px;color:#ffaa00;margin-top:4px;font-weight:600">Moderate</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">Mixed grid — gas + renewables blend</div>
+      </div>
+      <div style="background:rgba(255,102,68,0.08);border:1px solid rgba(255,102,68,0.25);border-radius:10px;padding:16px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:#ff6644;font-family:var(--mono)">300–450</div>
+        <div style="font-size:13px;color:#ff6644;margin-top:4px;font-weight:600">Dirty</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">Fossil heavy — coal and/or gas dominant</div>
+      </div>
+      <div style="background:rgba(255,68,68,0.08);border:1px solid rgba(255,68,68,0.25);border-radius:10px;padding:16px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:#ff4444;font-family:var(--mono)">&gt; 450</div>
+        <div style="font-size:13px;color:#ff4444;margin-top:4px;font-weight:600">Very Dirty</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">Coal-dominated — high Scope 2 emissions</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+</div>
+<!-- end page-carbon -->
+
+<!-- ══ FLEET ══ -->
+<div class="page" id="page-fleet">
+<div class="page-inner">
+<div class="grid">
+
+  <!-- Fleet KPI Bar -->
+  <div class="card col-3">
+    <div class="card-title"><i class="fa-solid fa-server"></i>Total Sites</div>
+    <div class="kpi-value cyan" id="fleet-kpi-sites">—</div>
+    <div class="kpi-delta neu" id="fleet-kpi-online">loading...</div>
+  </div>
+  <div class="card col-3">
+    <div class="card-title"><i class="fa-solid fa-microchip"></i>Total Racks</div>
+    <div class="kpi-value green" id="fleet-kpi-racks">—</div>
+    <div class="kpi-delta neu" id="fleet-kpi-capacity">loading...</div>
+  </div>
+  <div class="card col-3">
+    <div class="card-title"><i class="fa-solid fa-leaf"></i>Cleanest Site Now</div>
+    <div class="kpi-value" id="fleet-kpi-cleanest" style="font-size:20px;color:var(--green)">—</div>
+    <div class="kpi-delta pos" id="fleet-kpi-cleanest-ci">loading...</div>
+  </div>
+  <div class="card col-3">
+    <div class="card-title"><i class="fa-solid fa-bolt"></i>Cheapest Site Now</div>
+    <div class="kpi-value" id="fleet-kpi-cheapest" style="font-size:20px;color:var(--cyan)">—</div>
+    <div class="kpi-delta pos" id="fleet-kpi-cheapest-price">loading...</div>
+  </div>
+
+  <!-- Site Cards -->
+  <div class="col-12">
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px" id="fleet-site-cards">
+      <div style="color:var(--muted);font-size:14px;padding:24px 0;grid-column:span 5">Loading fleet data...</div>
+    </div>
+  </div>
+
+  <!-- Workload Router -->
+  <div class="card col-5">
+    <div class="card-title"><i class="fa-solid fa-route"></i>Workload Router</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px">Job Type</label>
+        <select id="fleet-job-type" class="form-input" style="font-size:13px">
+          <option value="llm_training">LLM Training</option>
+          <option value="llm_inference">LLM Inference</option>
+          <option value="diffusion">Diffusion Model</option>
+          <option value="rl_training">RL Training</option>
+          <option value="embedding">Embedding Batch</option>
+          <option value="batch_inference">Batch Inference</option>
+          <option value="data_processing">Data Processing</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px">Priority</label>
+        <select id="fleet-priority" class="form-input" style="font-size:13px">
+          <option value="balanced">Balanced</option>
+          <option value="cost">Cost First</option>
+          <option value="carbon">Carbon First</option>
+          <option value="capacity">Capacity First</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px">GPUs</label>
+        <input type="number" id="fleet-gpus" class="form-input" value="8" min="1" max="512" style="font-size:13px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px">Duration (min)</label>
+        <input type="number" id="fleet-duration" class="form-input" value="120" min="1" max="10080" style="font-size:13px">
+      </div>
+    </div>
+    <button class="btn-primary" onclick="runFleetRoute()" style="width:100%;margin-bottom:6px">
+      <i class="fa-solid fa-route"></i> Route Workload
+    </button>
+    <div id="fleet-route-result" style="margin-top:14px"></div>
+  </div>
+
+  <!-- Site Ranking Chart -->
+  <div class="card col-7">
+    <div class="card-title"><i class="fa-solid fa-ranking-star"></i>Site Composite Scores — Last Routing</div>
+    <div style="position:relative;height:260px">
+      <canvas id="fleet-scores-chart"></canvas>
+      <div id="fleet-chart-placeholder" style="position:absolute;inset:0;display:flex;align-items:center;
+           justify-content:center;color:var(--muted);font-size:13px;pointer-events:none">
+        <span><i class="fa-solid fa-route" style="margin-right:8px"></i>Click Route Workload to see site scores</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)" id="fleet-weights-display"></div>
+  </div>
+
+  <!-- Routing History -->
+  <div class="card col-12">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="card-title" style="margin-bottom:0"><i class="fa-solid fa-clock-rotate-left"></i>Routing History</div>
+      <button class="btn-secondary" onclick="loadFleetHistory()" style="padding:6px 14px;font-size:12px">
+        <i class="fa-solid fa-rotate"></i> Refresh
+      </button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="data-table" id="fleet-history-table" style="min-width:700px">
+        <thead>
+          <tr>
+            <th style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:8px 12px;text-align:left">Time</th>
+            <th style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:8px 12px;text-align:left">Job</th>
+            <th style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:8px 12px;text-align:left">GPUs</th>
+            <th style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:8px 12px;text-align:left">Duration</th>
+            <th style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:8px 12px;text-align:left">Routed To</th>
+            <th style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:8px 12px;text-align:left">Score</th>
+          </tr>
+        </thead>
+        <tbody id="fleet-history-body">
+          <tr><td colspan="6" style="color:var(--muted);padding:20px 12px;text-align:center">No routing history yet — run a workload routing above.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</div>
+</div>
+<!-- end page-fleet -->
+
+<!-- ══ HARDWARE ══ -->
+<div class="page" id="page-hardware">
+<div class="page-inner">
+<div class="grid">
+
+  <!-- Fleet Health KPIs -->
+  <div class="card col-3">
+    <div class="card-title"><i class="fa-solid fa-microchip"></i>GPU Count</div>
+    <div class="kpi-value cyan" id="hw-kpi-count">—</div>
+    <div class="kpi-delta neu" id="hw-kpi-mode">loading...</div>
+  </div>
+  <div class="card col-3">
+    <div class="card-title"><i class="fa-solid fa-heart-pulse"></i>Fleet Health</div>
+    <div class="kpi-value green" id="hw-kpi-health">—</div>
+    <div class="kpi-delta neu" id="hw-kpi-severity">loading...</div>
+  </div>
+  <div class="card col-3">
+    <div class="card-title"><i class="fa-solid fa-temperature-half"></i>Peak Temp</div>
+    <div class="kpi-value" id="hw-kpi-temp" style="color:var(--cyan)">—</div>
+    <div class="kpi-delta neu" id="hw-kpi-temp-label">loading...</div>
+  </div>
+  <div class="card col-3">
+    <div class="card-title"><i class="fa-solid fa-bolt"></i>Total Power Draw</div>
+    <div class="kpi-value" id="hw-kpi-power" style="color:var(--green)">—</div>
+    <div class="kpi-delta neu" id="hw-kpi-power-label">loading...</div>
+  </div>
+
+  <!-- GPU Cards (dynamic) -->
+  <div class="col-12" id="hw-gpu-cards-wrap">
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px" id="hw-gpu-cards">
+      <div style="color:var(--muted);font-size:14px;padding:24px 0;grid-column:span 2">Loading GPU telemetry...</div>
+    </div>
+  </div>
+
+  <!-- Temperature History Chart -->
+  <div class="card col-6">
+    <div class="card-title"><i class="fa-solid fa-chart-line"></i>Temperature History</div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+      <select id="hw-history-gpu" class="form-input" style="width:auto;font-size:13px;padding:6px 12px"
+              onchange="loadHWHistory(parseInt(this.value))">
+        <option value="0">GPU 0</option>
+        <option value="1">GPU 1</option>
+      </select>
+      <select id="hw-history-mins" class="form-input" style="width:auto;font-size:13px;padding:6px 12px"
+              onchange="loadHWHistory(parseInt(document.getElementById('hw-history-gpu').value))">
+        <option value="30">Last 30 min</option>
+        <option value="60" selected>Last 60 min</option>
+        <option value="120">Last 2 hrs</option>
+        <option value="360">Last 6 hrs</option>
+        <option value="1440">Last 24 hrs</option>
+      </select>
+      <div id="hw-history-status" style="font-size:12px;color:var(--muted);font-family:var(--mono)"></div>
+    </div>
+    <div style="position:relative;height:200px">
+      <canvas id="hw-temp-chart"></canvas>
+    </div>
+  </div>
+
+  <!-- Power History Chart -->
+  <div class="card col-6">
+    <div class="card-title"><i class="fa-solid fa-bolt"></i>Power Draw History</div>
+    <div style="position:relative;height:236px;margin-top:38px">
+      <canvas id="hw-power-chart"></canvas>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div class="card col-12">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="card-title" style="margin-bottom:0"><i class="fa-solid fa-triangle-exclamation"></i>Health Alerts</div>
+      <button class="btn-secondary" onclick="loadHardware()" style="padding:6px 14px;font-size:12px">
+        <i class="fa-solid fa-rotate"></i> Refresh
+      </button>
+    </div>
+    <div id="hw-alerts">
+      <div style="color:var(--muted);font-size:13px;padding:12px 0">No alerts — all GPUs healthy.</div>
+    </div>
+  </div>
+
+</div>
+</div>
+</div>
+<!-- end page-hardware -->
+
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════
+const API = 'http://localhost:8000/api/v1';
+let priceChart = null;
+const logs = { sim: [], sched: [] };
+
+// ═══════════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════════
+function ts() {
+  return new Date().toLocaleTimeString('en-US', {hour12:false});
+}
+
+function log(target, msg, type='inf') {
+  const el = document.getElementById(target + '-log');
+  if (!el) return;
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="log-ts">[${ts()}]</span><span class="log-msg ${type}">${msg}</span>`;
+  el.prepend(line);
+  while (el.children.length > 40) el.removeChild(el.lastChild);
+}
+
+async function apiFetch(path, opts={}) {
+  const r = await fetch(API + path, opts);
+  if (!r.ok) throw new Error(`HTTP ${r.status}: ${await r.text()}`);
+  return r.json();
+}
+
+function fmt(n, dec=2) {
+  if (n === undefined || n === null) return '—';
+  return Number(n).toFixed(dec);
+}
+
+function fmtK(n) {
+  if (Math.abs(n) >= 1000) return (n/1000).toFixed(1) + 'k';
+  return Math.round(n).toString();
+}
+
+// ═══════════════════════════════════════════════════════
+//  CLOCK
+// ═══════════════════════════════════════════════════════
+setInterval(() => {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('en-US', {hour12:false});
+}, 1000);
+
+// ═══════════════════════════════════════════════════════
+//  TAB SWITCHING
+// ═══════════════════════════════════════════════════════
+function switchTab(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'reports') loadReports();
+}
+
+// ═══════════════════════════════════════════════════════
+//  HEALTH
+// ═══════════════════════════════════════════════════════
+async function loadHealth() {
+  try {
+    const h = await apiFetch('/health');
+    document.getElementById('api-status-text').textContent = 'API Online';
+    document.getElementById('api-status').className = 'badge online';
+    document.getElementById('gpu-text').textContent =
+      h.gpu.available ? h.gpu.device.replace('NVIDIA ','').split(' ')[0] : 'CPU';
+    document.getElementById('gpu-pill').className =
+      'badge ' + (h.gpu.available ? 'teal' : 'warning');
+
+    document.getElementById('kpi-gpu-name').textContent =
+      h.gpu.available ? h.gpu.device.replace('NVIDIA ','') : 'CPU Mode';
+    document.getElementById('kpi-gpu-mem').textContent =
+      h.gpu.available ? h.gpu.memory_gb + ' GB VRAM' : 'No GPU detected';
+    document.getElementById('kpi-gpu-status').textContent =
+      h.gpu.available ? '● CUDA Active' : '● CPU Fallback';
+    document.getElementById('kpi-gpu-status').className =
+      'kpi-delta ' + (h.gpu.available ? 'good' : 'warn');
+
+    const e = h.engines;
+    ['twin','fore','sched'].forEach((k, i) => {
+      const keys = ['digital_twin','forecaster','scheduler'];
+      const online = e[keys[i]];
+      const el = document.getElementById('eng-' + k);
+      el.innerHTML = `<span class="tag ${online ? 'green' : 'red'}">${online ? '● Online' : '○ Offline'}</span>`;
+    });
+  } catch(e) {
+    document.getElementById('api-status-text').textContent = 'API Offline';
+    document.getElementById('api-status').className = 'badge offline';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PRICE FEED
+// ═══════════════════════════════════════════════════════
+async function loadPriceFeed() {
+  try {
+    const d = await apiFetch('/pricefeed?horizon_min=120');
+    const cur = d.current_price_usd_kwh;
+    document.getElementById('kpi-price').textContent = '$' + cur.toFixed(4);
+
+    const save_pct = ((cur - d.min_price) / cur * 100).toFixed(1);
+    const isDelta = cur > d.min_price;
+    document.getElementById('kpi-price-delta').className =
+      'kpi-delta ' + (isDelta ? 'warn' : 'good');
+    document.getElementById('kpi-price-delta').textContent =
+      isDelta
+        ? `▼ ${save_pct}% cheaper in +${d.cheapest_slot.minute_offset}min`
+        : '✓ At minimum price';
+
+    document.getElementById('kpi-cheap').textContent = '$' + d.min_price.toFixed(4);
+    document.getElementById('kpi-cheap-delta').textContent =
+      `@ minute +${d.cheapest_slot.minute_offset}`;
+    document.getElementById('kpi-cheap-delta').className = 'kpi-delta good';
+
+    const labels = d.price_curve.map(p => '+' + p.minute_offset + 'm');
+    const prices = d.price_curve.map(p => p.price_usd_kwh);
+    const minP   = Math.min(...prices);
+    const maxP   = Math.max(...prices);
+    const bgColors = prices.map(p =>
+      p === minP ? 'rgba(0,255,136,0.3)' : 'rgba(0,204,255,0.12)'
+    );
+    const borderColors = prices.map(p =>
+      p === minP ? 'rgba(0,255,136,0.9)' : 'rgba(0,204,255,0.45)'
+    );
+
+    if (priceChart) {
+      priceChart.data.labels = labels;
+      priceChart.data.datasets[0].data = prices;
+      priceChart.data.datasets[0].backgroundColor = bgColors;
+      priceChart.data.datasets[0].borderColor = borderColors;
+      priceChart.update('none');
+    } else {
+      const ctx = document.getElementById('chart-price').getContext('2d');
+      priceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            data: prices,
+            backgroundColor: bgColors,
+            borderColor: borderColors,
+            borderWidth: 1,
+            borderRadius: 3,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false },
+                     tooltip: {
+                       backgroundColor: '#0f1425',
+                       titleColor: '#e8edf5',
+                       bodyColor: '#a0aec0',
+                       borderColor: 'rgba(0,255,136,0.3)',
+                       borderWidth: 1,
+                       callbacks: {
+                         label: ctx => ' $' + ctx.parsed.y.toFixed(5) + '/kWh'
+                       }
+                     }
+          },
+          scales: {
+            x: {
+              ticks: { color: '#6b7a99', font: { family: 'JetBrains Mono', size: 9 },
+                       maxTicksLimit: 12 },
+              grid: { color: 'rgba(255,255,255,0.06)' }
+            },
+            y: {
+              ticks: { color: '#6b7a99', font: { family: 'JetBrains Mono', size: 9 },
+                       callback: v => '$' + v.toFixed(4) },
+              grid: { color: 'rgba(255,255,255,0.06)' }
+            }
+          }
+        }
+      });
+    }
+
+    renderChain('chain-standard', [
+      {name:'GRID',  eff:99.0, loss:1.0},
+      {name:'XFMR',  eff:97.0, loss:3.0},
+      {name:'UPS',   eff:94.0, loss:6.0},
+      {name:'PDU',   eff:98.0, loss:2.0},
+      {name:'GPU',   eff:100,  loss:0},
+    ]);
+
+    // ── Forecast mini-chart (reuses price_curve data) ──
+    const fLabels = d.price_curve.map(p => '+' + p.minute_offset + 'm');
+    const fPrices = d.price_curve.map(p => p.price_usd_kwh);
+    const fMin = Math.min(...fPrices);
+    const fMax = Math.max(...fPrices);
+
+    // Annotate: cheap zone (bottom 20% of range) vs expensive
+    const threshold = fMin + (fMax - fMin) * 0.25;
+    const ptColors  = fPrices.map(p => p <= threshold ? '#00ff88' : '#00ccff');
+
+    const fCtx = document.getElementById('chart-forecast').getContext('2d');
+    if (window._forecastChart) {
+      window._forecastChart.data.labels = fLabels;
+      window._forecastChart.data.datasets[0].data = fPrices;
+      window._forecastChart.data.datasets[0].pointBackgroundColor = ptColors;
+      window._forecastChart.update('none');
+    } else {
+      window._forecastChart = new Chart(fCtx, {
+        type: 'line',
+        data: {
+          labels: fLabels,
+          datasets: [{
+            data: fPrices,
+            borderColor: '#00ccff',
+            backgroundColor: 'rgba(0,204,255,0.07)',
+            borderWidth: 2,
+            pointRadius: 3,
+            pointBackgroundColor: ptColors,
+            pointBorderColor: 'transparent',
+            fill: true,
+            tension: 0.4,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0f1425',
+              titleColor: '#e8edf5',
+              bodyColor: '#a0aec0',
+              borderColor: 'rgba(0,204,255,0.3)',
+              borderWidth: 1,
+              callbacks: { label: c => ' $' + c.parsed.y.toFixed(5) + '/kWh' }
+            }
+          },
+          scales: {
+            x: { ticks: { color: '#6b7a99', font: { size: 9, family: 'JetBrains Mono' }, maxTicksLimit: 8 }, grid: { display: false } },
+            y: { ticks: { color: '#6b7a99', font: { size: 9, family: 'JetBrains Mono' }, callback: v => '$' + v.toFixed(4) }, grid: { color: 'rgba(255,255,255,0.05)' } }
+          }
+        }
+      });
+    }
+
+    // Update the card title with cheap window annotation
+    const cheapMin = d.cheapest_slot ? d.cheapest_slot.minute_offset : '—';
+    const fTitle = document.querySelector('#chart-forecast')?.closest('.card')?.querySelector('.card-title');
+    if (fTitle) fTitle.innerHTML = `<i class="fa-solid fa-wave-square"></i>Price Trend — Cheapest window: <span style="color:var(--green);font-family:var(--mono)">+${cheapMin}min</span>`;
+
+  } catch(e) {
+    console.warn('Price feed:', e);
+  }
+}
+
+function renderChain(containerId, nodes) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  nodes.forEach((n, i) => {
+    const div = document.createElement('div');
+    div.className = 'chain-node';
+    div.innerHTML = `
+      <div class="chain-name">${n.name}</div>
+      <div class="chain-eff">${n.eff === 100 ? '—' : n.eff + '%'}</div>
+      <div class="chain-loss">${n.loss > 0 ? '-' + n.loss + '%' : ''}</div>`;
+    el.appendChild(div);
+    if (i < nodes.length - 1) {
+      const arr = document.createElement('div');
+      arr.className = 'chain-arrow'; arr.textContent = '→';
+      el.appendChild(arr);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  JOB POLLING
+// ═══════════════════════════════════════════════════════
+function pollJob(runId, onDone, statusElId, logTarget) {
+  const interval = setInterval(async () => {
+    try {
+      const j = await apiFetch('/jobs/' + runId);
+      if (statusElId) {
+        const el = document.getElementById(statusElId);
+        el.textContent = `[${runId}] ${j.status.toUpperCase()}...`;
+        el.className = 'status-bar ' + (j.status === 'running' ? 'running' : '');
+      }
+      if (j.status === 'completed') {
+        clearInterval(interval);
+        if (statusElId) {
+          const el = document.getElementById(statusElId);
+          el.textContent = `[${runId}] Completed`;
+          el.className = 'status-bar done';
+        }
+        if (logTarget) log(logTarget, `Job ${runId} completed.`, 'ok');
+        onDone(j.result);
+        refreshJobs();
+      } else if (j.status === 'failed') {
+        clearInterval(interval);
+        if (statusElId) {
+          const el = document.getElementById(statusElId);
+          el.textContent = `[${runId}] Failed: ${j.error?.substring(0,80)}`;
+          el.className = 'status-bar error';
+        }
+        if (logTarget) log(logTarget, `Job ${runId} FAILED: ${j.error?.substring(0,60)}`, 'err');
+        refreshJobs();
+      }
+    } catch(e) { clearInterval(interval); }
+  }, 1500);
+}
+
+async function refreshJobs() {
+  try {
+    const d = await apiFetch('/jobs?limit=8');
+    const el = document.getElementById('jobs-list');
+    if (!d.jobs.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-family:var(--mono);font-size:11px;padding:8px 0">No jobs yet.</div>';
+      return;
+    }
+    const sc = {queued:'var(--muted)',running:'var(--amber)',completed:'var(--green)',failed:'var(--red)'};
+    el.innerHTML = `<table class="data-table">
+      <thead><tr><th>Run ID</th><th>Status</th><th>Created</th><th>Duration</th></tr></thead>
+      <tbody>
+      ${d.jobs.map(j => {
+        const dur = j.completed_at && j.started_at
+          ? ((new Date(j.completed_at) - new Date(j.started_at))/1000).toFixed(1) + 's'
+          : j.status === 'running' ? 'running...' : '—';
+        return `<tr>
+          <td class="val-teal">${j.run_id}</td>
+          <td><span class="tag ${j.status==='completed'?'green':j.status==='running'?'amber':j.status==='failed'?'red':''}">
+            ${j.status.toUpperCase()}</span></td>
+          <td>${j.created_at.slice(11,19)}</td>
+          <td>${dur}</td>
+        </tr>`;
+      }).join('')}
+      </tbody></table>`;
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════
+//  SIMULATION
+// ═══════════════════════════════════════════════════════
+async function runSimulation() {
+  const racks    = parseInt(document.getElementById('sim-racks').value);
+  const duration = parseInt(document.getElementById('sim-duration').value);
+  const profile  = document.getElementById('sim-profile').value;
+  const compare  = document.getElementById('sim-compare').checked;
+  const body = {num_racks: racks, duration_minutes: duration,
+                efficiency_profile: profile, compare_profiles: compare};
+  const btn = document.getElementById('sim-run-btn');
+  btn.disabled = true; btn.textContent = 'Running...';
+  log('sim', `Launching: ${racks} racks, ${duration}min, profile=${profile}, compare=${compare}`, 'inf');
+  try {
+    const r = await apiFetch('/simulate', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    log('sim', `Job queued: ${r.run_id}`, 'ok');
+    document.getElementById('sim-status').textContent = `[${r.run_id}] Queued...`;
+    document.getElementById('sim-status').className = 'status-bar running';
+    pollJob(r.run_id, (result) => {
+      btn.disabled = false; btn.textContent = '▶ Run Simulation';
+      renderSimResults(result, compare);
+    }, 'sim-status', 'sim');
+  } catch(e) {
+    btn.disabled = false; btn.textContent = '▶ Run Simulation';
+    log('sim', 'Error: ' + e.message, 'err');
+  }
+}
+
+function renderSimResults(result, compare) {
+  if (compare && result.standard) {
+    renderSimTable('sim-table-std', result.standard);
+    renderSimTable('sim-table-heron', result.heron);
+    document.getElementById('sim-results-std').style.display = '';
+    document.getElementById('sim-results-heron').style.display = '';
+    document.getElementById('sim-results-delta').style.display = '';
+    const d = result.delta;
+    document.getElementById('d-kwh-saved').textContent = fmtK(d.kwh_saved_annual);
+    document.getElementById('d-cost-saved').textContent = '$' + fmtK(d.cost_saved_annual);
+    document.getElementById('d-pue').textContent = '-' + fmt(d.pue_improvement, 4);
+    document.getElementById('d-loss-red').textContent = d.loss_reduction_pct + '%';
+    document.getElementById('d-chain-eff').textContent = fmt(result.heron.chain_efficiency * 100, 1) + '%';
+    document.getElementById('cmp-pue-delta').textContent = '-' + fmt(d.pue_improvement, 4);
+    document.getElementById('cmp-kwh-delta').textContent = fmtK(d.kwh_saved_annual);
+    document.getElementById('cmp-cost-delta').textContent = '$' + fmtK(d.cost_saved_annual);
+    document.getElementById('cmp-std-bar').style.width = fmt(result.standard.chain_efficiency*100,1) + '%';
+    document.getElementById('cmp-heron-bar').style.width = fmt(result.heron.chain_efficiency*100,1) + '%';
+  } else {
+    renderSimTable('sim-table-std', result);
+    document.getElementById('sim-results-std').style.display = '';
+  }
+  log('sim', 'Results rendered.', 'ok');
+}
+
+function renderSimTable(tableId, data) {
+  const rows = [
+    ['Grid Consumed',    fmt(data.grid_kwh,2) + ' kWh'],
+    ['IT Load',          fmt(data.it_kwh,2) + ' kWh'],
+    ['Chain Loss',       fmt(data.loss_kwh,2) + ' kWh (' + data.loss_pct + '%)'],
+    ['Avg PUE',          fmt(data.avg_pue,4)],
+    ['Peak Demand',      fmt(data.peak_demand_kw,2) + ' kW'],
+    ['Avg Grid Price',   '$' + fmt(data.avg_price_usd_kwh,5) + '/kWh'],
+    ['Period Cost',      '$' + fmt(data.period_cost_usd,4)],
+    ['Annual Cost',      '$' + Number(data.annual_cost_usd).toLocaleString()],
+    ['Annual kWh',       Number(data.annual_kwh).toLocaleString() + ' kWh'],
+    ['Chain Efficiency', fmt(data.chain_efficiency*100,2) + '%'],
+  ];
+  document.getElementById(tableId).innerHTML =
+    rows.map(([k,v]) =>
+      `<tr><td style="color:var(--muted)">${k}</td><td class="val-teal">${v}</td></tr>`
+    ).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCHEDULER
+// ═══════════════════════════════════════════════════════
+const JOB_COLORS = ['#00ff88','#bf7fff','#ffaa00','#00ccff','#ff4444'];
+
+async function runScheduler() {
+  const slots     = parseInt(document.getElementById('sched-slots').value);
+  const p         = parseInt(document.getElementById('sched-p').value);
+  const restarts  = parseInt(document.getElementById('sched-restarts').value);
+  const classical = document.getElementById('sched-classical').checked;
+  const body = {n_slots: slots, p_layers: p, n_candidates: 3,
+                n_restarts: restarts, classical_only: classical};
+  const btn = document.getElementById('sched-run-btn');
+  btn.disabled = true; btn.textContent = classical ? 'Scheduling (Greedy)...' : 'Running QAOA...';
+  log('sched', `Launching scheduler: ${slots}min window, p=${p}, classical=${classical}`, 'inf');
+  if (!classical) log('sched', 'QAOA will take ~30–120s. Please wait...', 'inf');
+  try {
+    const r = await apiFetch('/schedule', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    log('sched', `Job queued: ${r.run_id} (${r.n_qubits} qubits)`, 'ok');
+    document.getElementById('sched-status').textContent =
+      `[${r.run_id}] Queued... ${r.n_qubits > 0 ? r.n_qubits + ' qubits' : 'Greedy'}`;
+    document.getElementById('sched-status').className = 'status-bar running';
+    pollJob(r.run_id, (result) => {
+      btn.disabled = false; btn.textContent = '▶ Schedule Jobs';
+      renderSchedulerResults(result, slots);
+    }, 'sched-status', 'sched');
+  } catch(e) {
+    btn.disabled = false; btn.textContent = '▶ Schedule Jobs';
+    log('sched', 'Error: ' + e.message, 'err');
+    document.getElementById('sched-status').textContent = 'Error: ' + e.message;
+    document.getElementById('sched-status').className = 'status-bar error';
+  }
+}
+
+function renderSchedulerResults(result, n_slots) {
+  const methods = Object.keys(result).filter(k => k !== 'delta');
+  if (!methods.length) return;
+  const primary = result.greedy || result[methods[0]];
+  const asn = primary.assignments;
+  const jobs = Object.entries(asn).map(([id, info]) => ({id: parseInt(id), ...info}))
+    .sort((a,b) => a.start_min - b.start_min);
+  renderGantt(jobs, n_slots, 'GREEDY', JOB_COLORS);
+  document.getElementById('sched-gantt-panel').style.display = '';
+  renderSchedSummary(result);
+  document.getElementById('sched-summary-panel').style.display = '';
+  if (result.qaoa?.quantum_state) {
+    renderQuantumInfo(result.qaoa.quantum_state, result.delta);
+    document.getElementById('sched-quantum-panel').style.display = '';
+  }
+  log('sched', 'Schedule rendered.', 'ok');
+  if (result.delta) {
+    log('sched', `QAOA saved $${result.delta.cost_saved_period?.toFixed(5)} (${result.delta.cost_saved_pct?.toFixed(2)}%) | Annual: $${result.delta.cost_saved_annual}`, 'ok');
+  }
+}
+
+function renderGantt(jobs, n_slots, title, colors) {
+  document.getElementById('sched-gantt-title').textContent = `Schedule — ${title}`;
+  const gantt = document.getElementById('sched-gantt');
+  gantt.innerHTML = '';
+  jobs.forEach((job, i) => {
+    const row = document.createElement('div');
+    row.className = 'gantt-row';
+    const leftPct  = (job.start_min / n_slots) * 100;
+    const widthPct = (job.duration_min / n_slots) * 100;
+    const col = colors[i % colors.length];
+    row.innerHTML = `
+      <div class="gantt-label">${job.job_name.substring(0,14)}</div>
+      <div class="gantt-track">
+        <div class="gantt-bar" style="left:${leftPct}%;width:${widthPct}%;
+          background:${col}18;border-left:3px solid ${col};color:${col}">
+          +${job.start_min}m
+        </div>
+      </div>
+      <div class="gantt-cost">$${job.cost_usd?.toFixed(4)}</div>`;
+    gantt.appendChild(row);
+  });
+}
+
+function renderSchedSummary(result) {
+  const el = document.getElementById('sched-summary');
+  const methods = Object.keys(result).filter(k => k !== 'delta');
+  let html = '';
+  methods.forEach((m) => {
+    const r = result[m];
+    const col = m === 'qaoa' ? 'var(--green)' : 'var(--teal)';
+    html += `<div style="margin-bottom:20px">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:8px;text-transform:uppercase">${m}</div>
+      <div style="font-family:var(--mono);font-size:26px;color:${col};font-weight:500">$${r.total_cost_usd?.toFixed(4)}</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:4px">${r.total_energy_kwh?.toFixed(3)} kWh · ${r.solve_time_s?.toFixed(3)}s solve</div>
+    </div>`;
+  });
+  if (result.delta) {
+    const d = result.delta;
+    const col = d.cost_saved_period >= 0 ? 'var(--green)' : 'var(--red)';
+    html += `<div style="border-top:1px solid var(--border);padding-top:16px">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:8px;text-transform:uppercase">QAOA Improvement</div>
+      <div style="font-family:var(--mono);font-size:22px;color:${col};font-weight:500">$${d.cost_saved_period?.toFixed(5)}</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:4px">${d.cost_saved_pct?.toFixed(3)}% improvement</div>
+      <div style="font-family:var(--mono);font-size:15px;color:var(--amber);margin-top:10px;font-weight:500">≈ $${Number(d.cost_saved_annual).toLocaleString()}/yr</div>
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
+function renderQuantumInfo(qs, delta) {
+  const el = document.getElementById('sched-quantum-info');
+  const items = [
+    ['Qubits',      qs.n_qubits],
+    ['QAOA p',      qs.p_layers],
+    ['Best Energy', qs.energy?.toFixed(4)],
+    ['QUBO Value',  qs.qubo_val?.toFixed(2)],
+    ['Restarts',    qs.energy_trace?.length],
+  ];
+  el.innerHTML = items.map(([label, val]) => `
+    <div class="big-stat">
+      <div class="big-stat-val" style="color:var(--purple)">${val ?? '—'}</div>
+      <div class="big-stat-label">${label}</div>
+    </div>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  REPORTS
+// ═══════════════════════════════════════════════════════
+async function loadReports() {
+  try {
+    const d = await apiFetch('/reports');
+    const el = document.getElementById('reports-grid');
+    if (!d.reports.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-family:var(--mono);font-size:11px">No reports generated yet.</div>';
+      return;
+    }
+    el.innerHTML = d.reports.map(r => `
+      <div class="report-card">
+        <img src="http://localhost:8000${r.url}" style="width:100%;display:block;cursor:pointer;border-bottom:1px solid var(--border)"
+             onclick="window.open('http://localhost:8000${r.url}','_blank')"
+             onerror="this.style.display='none'">
+        <div style="padding:14px 16px">
+          <div style="font-family:var(--mono);font-size:13px;color:var(--text2);word-break:break-all;margin-bottom:10px;line-height:1.5">${r.filename}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-family:var(--mono);font-size:13px;color:var(--muted)">${r.size_kb} KB</span>
+            <a href="http://localhost:8000${r.url}" target="_blank"
+               style="font-family:var(--mono);font-size:13px;color:var(--cyan);text-decoration:none;font-weight:600;padding:5px 12px;border:1px solid rgba(0,204,255,0.3);border-radius:6px;transition:all 0.2s"
+               onmouseover="this.style.background='rgba(0,204,255,0.1)'"
+               onmouseout="this.style.background='transparent'">
+              Open ↗
+            </a>
+          </div>
+        </div>
+      </div>`
+    ).join('');
+  } catch(e) {
+    document.getElementById('reports-grid').innerHTML =
+      '<div style="color:var(--red);font-family:var(--mono);font-size:11px">Failed to load reports.</div>';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+async function init() {
+  await loadHealth();
+  await loadPriceFeed();
+  await refreshJobs();
+  loadCarbonOverviewKPIs();                           // Phase 8 — non-blocking
+  setInterval(loadPriceFeed, 60000);
+  setInterval(loadHealth, 30000);
+  setInterval(refreshJobs, 10000);
+  setInterval(loadCarbonOverviewKPIs, 300000);        // refresh every 5 min
+}
+
+// ═══════════════════════════════════════════════════════
+//  PHASE 7 — RL AGENT
+// ═══════════════════════════════════════════════════════
+let rlRewardChart    = null;
+let rlSavingsChart   = null;
+let rlAutoInterval   = null;
+let rlPollInterval   = null;
+let rlTrainHistory   = [];
+let rlCurrentRunId   = null;
+
+// ── Chart init ────────────────────────────────────────
+function initRLCharts() {
+  const chartDefaults = {
+    type: 'line',
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { display: false },
+        y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { font: { size: 9 }, color: '#6b7a99' } }
+      }
+    }
+  };
+
+  rlRewardChart = new Chart(document.getElementById('rl-reward-chart'), {
+    ...chartDefaults,
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Episode Reward', data: [],
+        borderColor: '#00ccff', backgroundColor: 'rgba(0,204,255,0.08)',
+        borderWidth: 1.5, pointRadius: 0, fill: true, tension: 0.3
+      }]
+    }
+  });
+
+  rlSavingsChart = new Chart(document.getElementById('rl-savings-chart'), {
+    ...chartDefaults,
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Savings %', data: [],
+        borderColor: '#00ff88', backgroundColor: 'rgba(0,255,136,0.08)',
+        borderWidth: 1.5, pointRadius: 0, fill: true, tension: 0.3
+      }]
+    }
+  });
+}
+
+// ── Load agent status ─────────────────────────────────
+async function loadRLStatus() {
+  try {
+    const s = await apiFetch('/rl/status');
+
+    // KPI row
+    const ready = s.ready;
+    document.getElementById('rl-status-val').textContent  = ready ? '● Ready' : '○ Not Ready';
+    document.getElementById('rl-status-val').style.color  = ready ? 'var(--green)' : 'var(--muted)';
+    document.getElementById('rl-status-sub').textContent  = ready ? 'Model loaded' : (s.error || 'No model trained');
+
+    const t = s.training || {};
+    if (t.episodes > 0) {
+      document.getElementById('rl-episodes-val').textContent = t.episodes.toLocaleString();
+      document.getElementById('rl-timesteps-sub').textContent = (t.timesteps || 0).toLocaleString() + ' timesteps';
+      document.getElementById('rl-reward-val').textContent    = t.mean_reward != null ? t.mean_reward.toFixed(3) : '—';
+      document.getElementById('rl-savings-val').textContent   = t.mean_savings_pct != null ? t.mean_savings_pct.toFixed(1) + '%' : '—';
+
+      // Update charts
+      if (!rlRewardChart) initRLCharts();
+      const rh = t.reward_history || [];
+      const sh = t.savings_history || [];
+      rlRewardChart.data.labels   = rh.map((_, i) => i);
+      rlRewardChart.data.datasets[0].data = rh;
+      rlRewardChart.update('none');
+      if (sh.length) {
+        rlSavingsChart.data.labels  = sh.map((_, i) => i);
+        rlSavingsChart.data.datasets[0].data = sh;
+        rlSavingsChart.update('none');
+      }
+
+      // History table
+      rlTrainHistory.push({
+        episodes: t.episodes, timesteps: t.timesteps,
+        mean_reward: t.mean_reward, best_reward: t.best_reward,
+        mean_savings_pct: t.mean_savings_pct, mean_sla_penalty: t.mean_sla_penalty,
+        elapsed: t.elapsed_sec, status: t.status
+      });
+      renderRLHistory();
+
+      // Progress bar (if training)
+      if (t.status === 'training' && s.summary) {
+        const total = s.summary.total_steps || 200000;
+        const pct   = Math.min(100, Math.round((t.timesteps / total) * 100));
+        document.getElementById('rl-progress-bar').style.width = pct + '%';
+        document.getElementById('rl-progress-text').textContent =
+          `Episode ${t.episodes} | Step ${(t.timesteps||0).toLocaleString()} | `+
+          `Reward ${t.mean_reward != null ? t.mean_reward.toFixed(3) : '—'} | `+
+          `${t.elapsed_sec}s elapsed`;
+      }
+    }
+
+    // Elapsed / device
+    if (s.summary) {
+      const elapsed = s.summary.elapsed_sec || 0;
+      document.getElementById('rl-time-val').textContent =
+        elapsed < 60 ? elapsed + 's' : (elapsed/60).toFixed(1) + 'm';
+      document.getElementById('rl-device-sub').textContent =
+        'device: ' + (s.summary.device || '—');
+    }
+
+  } catch(e) {
+    document.getElementById('rl-status-val').textContent = '○ Unavailable';
+    document.getElementById('rl-status-sub').textContent = 'API offline';
+  }
+}
+
+// ── Launch training ───────────────────────────────────
+async function launchTraining() {
+  const btn     = document.getElementById('rl-train-btn');
+  const steps   = parseInt(document.getElementById('rl-steps-sel').value);
+  const envs    = parseInt(document.getElementById('rl-envs-sel').value);
+  const racks   = parseInt(document.getElementById('rl-racks-sel').value);
+  const runName = document.getElementById('rl-run-name').value || 'run_001';
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Launching...';
+  rlLog(`Launching training: ${steps.toLocaleString()} steps, ${envs} envs, run=${runName}`);
+
+  try {
+    const res = await apiFetch('/rl/train', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ total_steps: steps, n_envs: envs, n_racks: racks, run_name: runName })
+    });
+
+    rlCurrentRunId = res.run_id;
+    rlLog(`Training job queued: ${res.run_id}`);
+    document.getElementById('rl-progress-block').style.display = '';
+    document.getElementById('rl-history-card').style.display = '';
+    btn.textContent = '⏳ Training...';
+
+    // Poll training log every 5s while training
+    if (rlPollInterval) clearInterval(rlPollInterval);
+    rlPollInterval = setInterval(async () => {
+      await loadRLStatus();
+      // Check job status
+      try {
+        const job = await apiFetch('/jobs/' + rlCurrentRunId);
+        if (job.status === 'completed') {
+          rlLog('✓ Training complete! Agent model loaded.');
+          clearInterval(rlPollInterval);
+          btn.disabled     = false;
+          btn.textContent  = '▶ Launch Training';
+          document.getElementById('rl-progress-bar').style.width = '100%';
+          document.getElementById('rl-progress-text').textContent = 'Training complete!';
+          await loadRLStatus();
+        } else if (job.status === 'failed') {
+          rlLog('✗ Training failed: ' + (job.error || 'unknown error'));
+          clearInterval(rlPollInterval);
+          btn.disabled    = false;
+          btn.textContent = '▶ Launch Training';
+        }
+      } catch(e) {}
+    }, 5000);
+
+  } catch(e) {
+    rlLog('Error: ' + (e.message || e));
+    btn.disabled    = false;
+    btn.textContent = '▶ Launch Training';
+  }
+}
+
+// ── Live recommendation ───────────────────────────────
+async function getLiveRecommendation() {
+  rlLog('Fetching live recommendation...');
+  try {
+    const rec = await apiFetch('/rl/recommend/live');
+    renderRecommendation(rec);
+  } catch(e) {
+    rlLog('Recommendation error: ' + (e.message || 'Agent not ready'));
+  }
+}
+
+function renderRecommendation(rec) {
+  if (!rec || rec.status !== 'ok') {
+    document.getElementById('rl-rec-not-ready').style.display = '';
+    document.getElementById('rl-rec-block').style.display = 'none';
+    rlLog('Agent not ready: ' + (rec.error || 'train a model first'));
+    return;
+  }
+
+  document.getElementById('rl-rec-not-ready').style.display = 'none';
+  document.getElementById('rl-rec-block').style.display = '';
+
+  const dispatchLabels = {
+    'hold':         '⏸ Hold',
+    'dispatch_now': '▶ Dispatch Now',
+    'defer_15min':  '⏩ Defer 15 min'
+  };
+  const coolingLabels = { 'reduce':'↓ Reduce', 'maintain':'= Maintain', 'boost':'↑ Boost' };
+  const upsLabels     = { 'charge':'⚡ Charge', 'idle':'○ Idle', 'discharge':'↓ Discharge' };
+
+  const dispatchColors = { 'hold':'var(--amber)', 'dispatch_now':'var(--green)', 'defer_15min':'var(--teal)' };
+
+  const dEl = document.getElementById('rl-rec-dispatch');
+  dEl.textContent  = dispatchLabels[rec.dispatch] || rec.dispatch;
+  dEl.style.color  = dispatchColors[rec.dispatch] || 'var(--teal)';
+
+  document.getElementById('rl-rec-cooling').textContent = coolingLabels[rec.cooling] || rec.cooling;
+  document.getElementById('rl-rec-ups').textContent     = upsLabels[rec.ups] || rec.ups;
+  document.getElementById('rl-rec-reasoning').textContent = rec.reasoning || '—';
+  document.getElementById('rl-rec-savings').textContent =
+    rec.estimated_savings_pct != null ? '+' + rec.estimated_savings_pct.toFixed(1) + '%' : '—';
+  document.getElementById('rl-rec-conf').textContent =
+    rec.confidence != null ? (rec.confidence * 100).toFixed(0) + '%' : '—';
+
+  // Action descriptions
+  if (rec.action_descriptions) {
+    document.getElementById('rl-action-desc').style.display = '';
+    document.getElementById('rl-desc-dispatch').textContent = '📋 ' + rec.action_descriptions.dispatch;
+    document.getElementById('rl-desc-cooling').textContent  = '❄️ '  + rec.action_descriptions.cooling;
+    document.getElementById('rl-desc-ups').textContent      = '🔋 '  + rec.action_descriptions.ups;
+  }
+
+  rlLog(`Rec: dispatch=${rec.dispatch}, cooling=${rec.cooling}, ups=${rec.ups}, confidence=${(rec.confidence*100).toFixed(0)}%, savings=+${rec.estimated_savings_pct}%`);
+}
+
+// ── Auto recommend toggle ─────────────────────────────
+function startAutoRecommend() {
+  const btn = document.getElementById('rl-auto-btn');
+  if (rlAutoInterval) {
+    clearInterval(rlAutoInterval);
+    rlAutoInterval = null;
+    btn.textContent = '↻ Auto (30s)';
+    btn.classList.remove('btn-primary');
+    btn.classList.add('btn-secondary');
+  } else {
+    getLiveRecommendation();
+    rlAutoInterval = setInterval(getLiveRecommendation, 30000);
+    btn.textContent = '■ Stop Auto';
+    btn.classList.remove('btn-secondary');
+    btn.classList.add('btn-primary');
+    rlLog('Auto-recommend enabled (every 30s)');
+  }
+}
+
+// ── History table ─────────────────────────────────────
+function renderRLHistory() {
+  const tbody = document.getElementById('rl-history-body');
+  // Show last 10 snapshots, newest first
+  const rows = [...rlTrainHistory].reverse().slice(0, 10);
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${(r.episodes||0).toLocaleString()}</td>
+      <td>${(r.timesteps||0).toLocaleString()}</td>
+      <td style="color:var(--teal)">${r.mean_reward != null ? r.mean_reward.toFixed(3) : '—'}</td>
+      <td style="color:var(--purple)">${r.best_reward != null ? r.best_reward.toFixed(3) : '—'}</td>
+      <td style="color:var(--green)">${r.mean_savings_pct != null ? r.mean_savings_pct.toFixed(1)+'%' : '—'}</td>
+      <td style="color:var(--amber)">${r.mean_sla_penalty != null ? r.mean_sla_penalty.toFixed(4) : '—'}</td>
+      <td>${r.elapsed != null ? r.elapsed+'s' : '—'}</td>
+      <td><span class="badge ${r.status==='training'?'teal':r.status==='complete'?'online':'warning'}">${r.status||'—'}</span></td>
+    </tr>`).join('');
+}
+
+// ── Log helper ────────────────────────────────────────
+function rlLog(msg) {
+  const el  = document.getElementById('rl-train-log');
+  const ts  = new Date().toLocaleTimeString();
+  el.innerHTML += `<div><span style="color:var(--teal)">[${ts}]</span> ${msg}</div>`;
+  el.scrollTop  = el.scrollHeight;
+}
+
+// ── Hook into switchTab for RL + Carbon + Help sync ────────────
+const _origSwitchTab = switchTab;
+switchTab = function(name, btn) {
+  _origSwitchTab(name, btn);
+  if (name === 'rl') {
+    if (!rlRewardChart) initRLCharts();
+    loadRLStatus();
+  }
+  if (name === 'carbon') {
+    loadCarbon();
+  }
+  if (name === 'fleet') {
+    loadFleet();
+  }
+  if (name === 'hardware') {
+    loadHardware();
+    startHWAutoRefresh();
+  } else {
+    stopHWAutoRefresh();
+  }
+  if (_helpOpen) showHelpTab(name);
+};
+
+// ═══════════════════════════════════════════════════════
+//  HELP DRAWER
+// ═══════════════════════════════════════════════════════
+const HELP_CONTENT = {
+  overview: {
+    label: 'Overview Tab',
+    html: `
+      <div class="help-section">
+        <h3><i class="fa-solid fa-gauge-high"></i>What is the Overview tab?</h3>
+        <p>Your real-time command center. Everything here auto-refreshes — price feed every 60 seconds, health every 30 seconds, job queue every 10 seconds. No manual action needed.</p>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-bolt"></i>KPI Cards — Top Row</h3>
+        <div class="help-metric"><div class="hm-name">Grid Price Now</div><div class="hm-desc">The current electricity price in $/kWh from CAISO (California ISO). This is what you're paying per kilowatt-hour right now. Lower is better — the RL agent watches this to decide when to run workloads.</div></div>
+        <div class="help-metric"><div class="hm-name">Cheapest Slot (2hr)</div><div class="hm-desc">The lowest price window available in the next 2 hours. If this is significantly below the current price, it's worth deferring non-urgent jobs until that window.</div></div>
+        <div class="help-metric"><div class="hm-name">GPU Accelerator</div><div class="hm-desc">Your active NVIDIA GPU detected at startup. Shows device name, VRAM, and CUDA status. All AI engines — LSTM, QAOA, and RL training — run on this device.</div></div>
+        <div class="help-metric"><div class="hm-name">Engine Status</div><div class="hm-desc">Shows whether the three AI engines (Digital Twin, LSTM Forecaster, QAOA Scheduler) loaded correctly at startup. All three should show a green checkmark.</div></div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-chart-line"></i>Price Forecast Chart</h3>
+        <p>120-minute electricity price forecast from the live grid connector. The curve shows predicted $/kWh for the next 2 hours. Valleys = cheap windows, peaks = expensive periods to avoid.</p>
+        <div class="help-tip"><strong>Tip:</strong> If you see a clear valley 30–60 minutes ahead, use the Scheduler tab to queue jobs into that window for maximum savings.</div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-plug-circle-bolt"></i>Live Power Chain</h3>
+        <p>Real-time power flow through your data center:</p>
+        <div class="help-metric"><div class="hm-name">IT Load</div><div class="hm-desc">Total compute power consumed by GPU racks (kW). This is the useful work being done.</div></div>
+        <div class="help-metric"><div class="hm-name">Cooling</div><div class="hm-desc">Power consumed by cooling systems (CRAC, chillers). Typically 30–50% of IT load in conventional facilities.</div></div>
+        <div class="help-metric"><div class="hm-name">UPS Loss</div><div class="hm-desc">Power lost in the UPS battery system (conversion inefficiency). Usually 2–5%.</div></div>
+        <div class="help-metric"><div class="hm-name">Grid Draw</div><div class="hm-desc">Total power pulled from the grid = IT + Cooling + UPS losses. This is what you're billed for.</div></div>
+        <div class="help-metric"><div class="hm-name">PUE</div><div class="hm-desc">Power Usage Effectiveness = Grid Draw ÷ IT Load. A perfect facility = 1.0. Industry average ≈ 1.5. Under 1.2 is excellent. Lower is better.</div></div>
+        <div class="help-metric"><div class="hm-name">Cost Rate</div><div class="hm-desc">Current energy spend rate in $/hour based on live grid price × grid draw.</div></div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-list-check"></i>Active Job Queue</h3>
+        <p>Background jobs submitted to the API — simulations, scheduler runs, and RL training jobs. Shows run ID, status (queued/running/completed/failed), creation time, and duration. Jobs persist until server restart.</p>
+      </div>`
+  },
+  simulation: {
+    label: 'Digital Twin Tab',
+    html: `
+      <div class="help-section">
+        <h3><i class="fa-solid fa-cubes"></i>What is the Digital Twin?</h3>
+        <p>A physics-based simulation of your entire data center power chain built with SimPy (discrete-event simulation). It models GPU rack power draw, cooling overhead, UPS charge/discharge cycles, and PUE across any time horizon without touching real hardware.</p>
+        <p>Use it to answer "what if" questions — what happens to energy cost if I add 4 more racks? What's the PUE impact of a hotter cooling setpoint?</p>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-sliders"></i>Configuration Options</h3>
+        <div class="help-metric"><div class="hm-name">Simulation Mode</div><div class="hm-desc"><strong>Standard TOU:</strong> Time-of-use pricing model using CAISO rate schedules. Realistic baseline for cost analysis.<br><br><strong>Project HERON:</strong> Quantum-enhanced mode that applies QAOA optimization to workload placement within the simulation. Shows potential savings vs standard operation.</div></div>
+        <div class="help-metric"><div class="hm-name">GPU Rack Count</div><div class="hm-desc">Number of GPU racks to simulate. Each rack represents a cluster of GPUs at typical full-load power draw. More racks = higher absolute cost but same PUE dynamics.</div></div>
+        <div class="help-metric"><div class="hm-name">Duration</div><div class="hm-desc">How much simulated time to run. 8 hours (one shift) gives a good cost picture. 24 hours captures full diurnal price variation.</div></div>
+        <div class="help-metric"><div class="hm-name">Workload Mix</div><div class="hm-desc">The blend of AI job types: LLM inference, diffusion models, RL training, embedding generation. Different mixes have different power profiles and cooling demands.</div></div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-chart-area"></i>Reading the Results</h3>
+        <div class="help-metric"><div class="hm-name">Energy Consumed (kWh)</div><div class="hm-desc">Total electricity consumed over the simulation period. Multiply by your local rate to get dollar cost.</div></div>
+        <div class="help-metric"><div class="hm-name">Total Cost ($)</div><div class="hm-desc">Energy cost using time-varying TOU pricing. This accounts for cheap off-peak and expensive on-peak hours.</div></div>
+        <div class="help-metric"><div class="hm-name">Peak Demand (kW)</div><div class="hm-desc">Highest instantaneous power draw. Important for demand charge calculations — many utilities add a large fee based on your monthly peak.</div></div>
+        <div class="help-metric"><div class="hm-name">PUE</div><div class="hm-desc">Average Power Usage Effectiveness across the simulation. Compare Standard vs HERON to see efficiency gains from quantum-optimized scheduling.</div></div>
+        <div class="help-tip"><strong>Tip:</strong> Run both Standard and HERON modes back-to-back. The delta panel shows exactly how much the quantum scheduler saved in cost and improved PUE.</div>
+      </div>`
+  },
+  scheduler: {
+    label: 'Scheduler Tab',
+    html: `
+      <div class="help-section">
+        <h3><i class="fa-solid fa-atom"></i>What is the QAOA Scheduler?</h3>
+        <p>A quantum-classical hybrid workload scheduler that uses the Quantum Approximate Optimization Algorithm (QAOA) implemented in Google Cirq + TensorFlow Quantum. It formulates the job-placement problem as a QUBO (Quadratic Unconstrained Binary Optimization) and finds near-optimal assignments of jobs to time slots that minimize energy cost.</p>
+        <p>The greedy baseline assigns each job to its cheapest available slot independently. QAOA considers all jobs simultaneously and finds globally better schedules — the advantage grows with queue size.</p>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-sliders"></i>Configuration Options</h3>
+        <div class="help-metric"><div class="hm-name">Scheduling Algorithm</div><div class="hm-desc"><strong>QAOA:</strong> Quantum-classical hybrid — best quality but slower.<br><strong>Greedy:</strong> Fast baseline — each job picks cheapest slot independently.<br><strong>Both (Compare):</strong> Run both and show cost comparison side by side. Recommended.</div></div>
+        <div class="help-metric"><div class="hm-name">Job Queue Size</div><div class="hm-desc">Number of AI workloads to schedule. QAOA's advantage over greedy increases with more jobs (more interactions to optimize). Practical limit is ~15 jobs due to qubit count.</div></div>
+        <div class="help-metric"><div class="hm-name">Time Slots (Horizon)</div><div class="hm-desc">Number of 5-minute scheduling windows available. 12 slots = 1 hour look-ahead. More slots give the scheduler more flexibility to find cheap windows.</div></div>
+        <div class="help-metric"><div class="hm-name">QAOA Circuit Depth (p)</div><div class="hm-desc">Number of alternating cost/mixer layers in the quantum circuit. Higher p = better optimization quality but exponentially more quantum gates. p=2 is the sweet spot for this problem size.</div></div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-bars-progress"></i>Reading the Gantt Chart</h3>
+        <p>Each row is a job. The horizontal position shows which time slot it was assigned to. Green/cyan bars = QAOA schedule. Amber bars = Greedy schedule. Jobs placed earlier in cheap windows = lower cost.</p>
+        <div class="help-metric"><div class="hm-name">Cost Comparison Panel</div><div class="hm-desc">Shows total cost for QAOA vs Greedy in $. The savings % is how much cheaper QAOA is than greedy — this is the quantum advantage.</div></div>
+        <div class="help-metric"><div class="hm-name">Quantum Circuit Metrics</div><div class="hm-desc">Qubit count, gate depth, QAOA iterations, and final cost function value. Lower cost function = better schedule quality.</div></div>
+        <div class="help-tip"><strong>Tip:</strong> QAOA advantage is most visible with 8–10 jobs and 12+ time slots. With only 4 jobs, greedy often matches QAOA because the problem is simple enough for greedy to solve optimally.</div>
+      </div>`
+  },
+  reports: {
+    label: 'Reports Tab',
+    html: `
+      <div class="help-section">
+        <h3><i class="fa-solid fa-chart-bar"></i>What are Reports?</h3>
+        <p>Every time you run a simulation or scheduler job, Energia automatically generates a PNG chart and saves it to the <code style="font-family:var(--mono);font-size:12px;background:var(--surface2);padding:2px 6px;border-radius:4px">reports/</code> directory on the server. The Reports tab displays all of them as a gallery.</p>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-file-image"></i>Report Types</h3>
+        <div class="help-metric"><div class="hm-name">energia_twin_standard_*.png</div><div class="hm-desc">Digital Twin simulation in Standard TOU mode. Shows power draw over time, cost curve, and PUE profile for the simulated period.</div></div>
+        <div class="help-metric"><div class="hm-name">energia_twin_heron_*.png</div><div class="hm-desc">Digital Twin in HERON (quantum-enhanced) mode. Same charts but with QAOA-optimized workload placement applied — compare against standard to see the savings.</div></div>
+        <div class="help-metric"><div class="hm-name">energia_scheduler_*.png</div><div class="hm-desc">QAOA scheduler output — Gantt chart with job placements, cost comparison between QAOA and greedy, and quantum circuit metrics.</div></div>
+        <div class="help-metric"><div class="hm-name">energia_forecast_*.png</div><div class="hm-desc">LSTM demand forecast output — predicted GPU power demand over the next 30/60/120 minutes vs actual (when available).</div></div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-circle-info"></i>How to Use</h3>
+        <p>Click any thumbnail to open the full-resolution image in a new tab. Click <strong style="color:var(--cyan)">Open ↗</strong> to download or share the direct URL. Use <strong style="color:var(--cyan)">Refresh Reports</strong> after running a new simulation to see the latest files.</p>
+        <p>Report filenames include a timestamp so older runs are never overwritten. The gallery shows all reports from the current server session.</p>
+        <div class="help-tip"><strong>Tip:</strong> Reports are saved to <code style="font-family:var(--mono);font-size:12px;background:var(--surface2);padding:2px 6px;border-radius:4px">~/energia/reports/</code> on disk — you can archive them or share them without the dashboard.</div>
+      </div>`
+  },
+  rl: {
+    label: 'RL Agent Tab',
+    html: `
+      <div class="help-section">
+        <h3><i class="fa-solid fa-robot"></i>What is the RL Agent?</h3>
+        <p>A Proximal Policy Optimization (PPO) reinforcement learning agent trained on the Energia Digital Twin environment. It learns — through millions of simulated 5-minute decisions — to autonomously control three systems simultaneously to minimize energy cost while keeping jobs on schedule.</p>
+        <p>Unlike the QAOA Scheduler (which optimizes a fixed queue), the RL agent operates <strong style="color:var(--green)">continuously in real time</strong>, making decisions every 5 minutes based on current grid prices, queue state, and system telemetry.</p>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-graduation-cap"></i>Training the Agent</h3>
+        <div class="help-metric"><div class="hm-name">Training Steps</div><div class="hm-desc">Total environment steps for the PPO rollout. 200,000 steps ≈ 700 simulated 24-hour episodes ≈ 6 minutes on your RTX GPU. More steps = better policy, diminishing returns after ~500k.</div></div>
+        <div class="help-metric"><div class="hm-name">Parallel Environments</div><div class="hm-desc">Number of Digital Twin instances running simultaneously to collect experience. 4 environments = 4× faster data collection. Increase if you have spare RAM (each env uses ~200MB).</div></div>
+        <div class="help-metric"><div class="hm-name">GPU Racks per Env</div><div class="hm-desc">Size of the simulated data center each environment uses. More racks = higher variance in cost signals = slower learning. Start with 4.</div></div>
+        <div class="help-metric"><div class="hm-name">Run Name</div><div class="hm-desc">Label for this training run. Models are saved to <code style="font-family:var(--mono);font-size:12px;background:var(--surface2);padding:2px 6px;border-radius:4px">models/rl/</code>. Use different names to keep multiple trained agents.</div></div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-chart-line"></i>Reading the Training Curves</h3>
+        <div class="help-metric"><div class="hm-name">Episode Reward</div><div class="hm-desc">Total reward earned per simulated episode. Should trend upward as the agent improves. Your trained agent reached +101 — roughly 4× improvement from untrained (+25).</div></div>
+        <div class="help-metric"><div class="hm-name">Cost Savings %</div><div class="hm-desc">How much cheaper the agent's schedule is versus the naive always-dispatch baseline. Your current agent achieves ~75% savings — meaning it's spending 75% less on energy than a system that dispatches every job immediately regardless of price.</div></div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-bolt"></i>Live Recommendations</h3>
+        <p>The agent observes the current live grid price, 12-step price forecast, queue depth, GPU utilization, UPS charge level, PUE, and time of day — and outputs three simultaneous decisions:</p>
+        <div class="help-metric"><div class="hm-name">Job Dispatch</div><div class="hm-desc"><strong>Hold:</strong> Price is above forecast minimum — wait for a cheaper window.<br><strong>Dispatch Now:</strong> Price is at or near a low — run jobs now.<br><strong>Defer 15 min:</strong> Price is dropping — wait a bit longer for a better window.</div></div>
+        <div class="help-metric"><div class="hm-name">Cooling</div><div class="hm-desc"><strong>Reduce −10%:</strong> Load is light, cooling can back off to save power.<br><strong>Maintain:</strong> Current cooling is appropriate for the load.<br><strong>Boost +10%:</strong> Heavy load or high ambient — increase cooling to protect hardware.</div></div>
+        <div class="help-metric"><div class="hm-name">UPS Mode</div><div class="hm-desc"><strong>Charge:</strong> Grid price is low — store energy in the UPS battery now.<br><strong>Idle:</strong> No action needed.<br><strong>Discharge:</strong> Grid price is high — draw from battery instead of the expensive grid.</div></div>
+        <div class="help-metric"><div class="hm-name">Confidence</div><div class="hm-desc">How certain the agent is about its recommendation (0–100%). Derived from the policy distribution entropy — low entropy = high confidence. Under 50% means the agent sees an ambiguous situation.</div></div>
+        <div class="help-tip"><strong>Tip:</strong> Enable <strong>Auto (30s)</strong> to have the agent continuously refresh recommendations. Use this during peak pricing events to see how the agent responds to price spikes in real time.</div>
+      </div>`
+  },
+  carbon: {
+    label: 'Carbon Tab',
+    html: `
+      <div class="help-section">
+        <h3><i class="fa-solid fa-leaf"></i>What is the Carbon tab?</h3>
+        <p>Real-time carbon intensity data from the <strong style="color:var(--cyan)">Electricity Maps API</strong> for all five monitored grid regions. Carbon intensity (gCO₂eq/kWh) measures how much CO₂ is emitted per unit of electricity consumed — it changes hour by hour as the grid mix shifts between renewables and fossil fuels.</p>
+        <p>This data is the foundation of Scope 2 emissions reporting for your data center energy usage.</p>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-gauge-high"></i>Zone Cards</h3>
+        <p>Five cards across the top — one per monitored ISO region. Each shows current carbon intensity in gCO₂eq/kWh, a color-coded label, and fossil-free percentage when available. The <strong style="color:var(--green)">🌱 CLEANEST</strong> badge marks the lowest-carbon grid right now.</p>
+        <div class="help-metric"><div class="hm-name">est. label</div><div class="hm-desc">When shown, the value is an Electricity Maps estimate rather than measured data. Estimates are generated from weather models and historical patterns — still accurate, just not directly metered.</div></div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-chart-scatter"></i>Pareto Analysis</h3>
+        <p>The scatter chart plots every zone as a point — X axis is price (¢/kWh), Y axis is carbon intensity (gCO₂eq/kWh). The goal is to be in the <strong style="color:var(--green)">bottom-left corner</strong> — cheap AND clean.</p>
+        <div class="help-metric"><div class="hm-name">Pareto Frontier</div><div class="hm-desc">Brighter, larger dots are on the Pareto frontier — zones where you cannot improve on one dimension (cost or carbon) without getting worse on the other. These are the objectively best options for some weighting of priorities.</div></div>
+        <div class="help-metric"><div class="hm-name">Weight Slider</div><div class="hm-desc">Drag left toward 💰 to prioritize cost, right toward 🌱 to prioritize carbon. The recommendation card below updates in real time with the optimal zone for your chosen weighting.</div></div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-clock-rotate-left"></i>24-Hour History</h3>
+        <p>Hourly carbon intensity for the past 24 hours for any selected zone. Colored dots match the intensity level — green = clean hours, amber/red = dirty hours. Use this to identify daily patterns — California typically gets cleaner midday when solar peaks.</p>
+        <div class="help-tip"><strong>Tip:</strong> Compare the history chart timing against the price forecast on the Overview tab. The ideal dispatch window is when both price AND carbon are low simultaneously.</div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-fire-flame-curved"></i>Fuel Mix</h3>
+        <p>Breakdown of what's generating electricity in the selected zone right now — wind, solar, nuclear, hydro, gas, coal, etc. — shown as percentage of total consumption. This is why the carbon number is what it is.</p>
+        <div class="help-metric"><div class="hm-name">Fossil Free %</div><div class="hm-desc">Percentage of electricity coming from non-fossil sources (renewables + nuclear). Higher is better. This is the key metric for carbon-aware workload routing.</div></div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-scale-balanced"></i>Intensity Reference</h3>
+        <p>Industry reference thresholds in gCO₂eq/kWh. Use these to classify your grid's carbon performance and set policy thresholds — for example: "only run training jobs when carbon intensity is below 150."</p>
+        <div class="help-tip"><strong>Tip:</strong> The Overview tab shows a live carbon KPI for CAISO and the cleanest zone available — no need to open the Carbon tab to get a quick read during operations.</div>
+      </div>`
+  },
+  fleet: {
+    label: 'Fleet Tab',
+    html: `
+      <div class="help-section">
+        <h3><i class="fa-solid fa-network-wired"></i>What is the Fleet tab?</h3>
+        <p>Phase 9 — Multi-site orchestration. Energia manages a virtual fleet of 5 data centers across different US grid regions. The fleet engine scores every site in real time on price, carbon, available capacity, and PUE, then routes workloads to the optimal site for your priority.</p>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-server"></i>Site Cards</h3>
+        <p>Five cards — one per site. Each shows live price and carbon data for that site's grid region (same data as the Carbon tab), plus current capacity utilization and PUE. The <strong style="color:var(--cyan)">💰 CHEAPEST</strong> and <strong style="color:var(--green)">🌱 CLEANEST</strong> badges mark the best sites on each axis right now.</p>
+        <div class="help-metric"><div class="hm-name">Capacity bar</div><div class="hm-desc">Green = headroom available, amber = getting full, red = near capacity. The router automatically down-scores sites above 80% utilization.</div></div>
+        <div class="help-metric"><div class="hm-name">PUE</div><div class="hm-desc">Power Usage Effectiveness — ratio of total facility power to IT load. Lower is better. 1.0 = perfect efficiency. Real data centers typically run 1.2–1.5.</div></div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-route"></i>Workload Router</h3>
+        <p>Select your job type, GPU count, duration, and priority strategy, then hit <strong>Route Workload</strong>. The engine scores all online sites and returns the best choice with full reasoning, estimated cost, and estimated carbon emissions for that job.</p>
+        <div class="help-metric"><div class="hm-name">Priority: Balanced</div><div class="hm-desc">40% cost, 30% carbon, 20% capacity, 10% PUE. Best for general workloads where you want a sensible tradeoff.</div></div>
+        <div class="help-metric"><div class="hm-name">Priority: Cost First</div><div class="hm-desc">70% cost weighting. Routes to the cheapest grid regardless of carbon. Best for budget-sensitive batch jobs.</div></div>
+        <div class="help-metric"><div class="hm-name">Priority: Carbon First</div><div class="hm-desc">70% carbon weighting. Routes to the cleanest grid regardless of cost. Best for Scope 2 compliance targets.</div></div>
+        <div class="help-metric"><div class="hm-name">Priority: Capacity First</div><div class="hm-desc">50% capacity weighting. Routes to the site with the most headroom. Best for urgent jobs that can't wait for a cheaper window.</div></div>
+        <div class="help-tip"><strong>Tip:</strong> Run the same job with different priorities and compare — the site selection and savings estimates will shift. This is how you quantify the cost of your carbon policy.</div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-ranking-star"></i>Score Chart</h3>
+        <p>After each routing run, the bar chart shows composite scores for all sites. Green bar = recommended site. Hover any bar to see the breakdown: price score, carbon score, capacity score, and PUE score independently. Scores are normalized 0–100 relative to the current fleet — so a score of 90 means that site is near the top on your weighted criteria right now.</p>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-clock-rotate-left"></i>Routing History</h3>
+        <p>Every routing decision is logged to a local SQLite database. The table shows the last 20 decisions — job type, GPU count, duration, which site was chosen, and the composite score at time of routing. Useful for auditing dispatch decisions and spotting patterns.</p>
+        <div class="help-tip"><strong>Tip:</strong> The cost saving % and carbon saving % shown in the recommendation card are calculated vs the worst available site for that job — so they represent the actual value of intelligent routing over naive single-site dispatch.</div>
+      </div>`
+  },
+  hardware: {
+    label: 'Hardware Tab',
+    html: `
+      <div class="help-section">
+        <h3><i class="fa-solid fa-microchip"></i>What is the Hardware tab?</h3>
+        <p>Phase 10 — Real-time GPU health monitoring via <strong style="color:var(--cyan)">NVML (pynvml)</strong>. Energia polls your GPUs every 10 seconds and runs anomaly detection on the telemetry stream, closing the loop between energy optimization and hardware protection.</p>
+        <p>If pynvml is installed and GPUs are detected, data is live from your hardware. Otherwise the tab runs in <strong style="color:var(--muted)">Synthetic mode</strong> — two virtual GPUs simulating realistic RTX 4060 and A1000 readings.</p>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-heart-pulse"></i>Health Score</h3>
+        <p>Each GPU gets a 0–100 score from thermal margin, power margin, memory headroom, and ECC errors. IsolationForest anomaly detection can further penalise unusual patterns across the combined metric stream.</p>
+        <div class="help-metric"><div class="hm-name">85–100: Healthy</div><div class="hm-desc">All metrics normal. No action needed.</div></div>
+        <div class="help-metric"><div class="hm-name">65–84: Good</div><div class="hm-desc">Minor deviations from baseline. Keep monitoring.</div></div>
+        <div class="help-metric"><div class="hm-name">45–64: Fair</div><div class="hm-desc">Elevated stress. Check cooling and workload mix.</div></div>
+        <div class="help-metric"><div class="hm-name">0–44: Degraded / Critical</div><div class="hm-desc">Schedule maintenance or take immediate action. Fleet router will down-score this site.</div></div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-temperature-half"></i>Key Metrics</h3>
+        <div class="help-metric"><div class="hm-name">Temperature</div><div class="hm-desc">Warning 78°C, critical 88°C. Sustained operation above 85°C accelerates VRAM degradation and triggers thermal throttling.</div></div>
+        <div class="help-metric"><div class="hm-name">Power / TDP %</div><div class="hm-desc">Percentage of rated Thermal Design Power. Warning 90%, critical 100%. Sustained spikes at idle indicate a problem.</div></div>
+        <div class="help-metric"><div class="hm-name">VRAM</div><div class="hm-desc">GPU memory utilisation. Warning 90%, critical 98%. At 98%+ CUDA throws out-of-memory errors and jobs fail.</div></div>
+        <div class="help-metric"><div class="hm-name">ECC Errors</div><div class="hm-desc">Single-bit errors are correctable (warning). Double-bit errors are uncorrectable (critical) — indicates a hardware fault requiring immediate investigation.</div></div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-chart-line"></i>History Charts</h3>
+        <p>Temperature and power draw history from 30 minutes to 24 hours. Dots on the temperature chart are colour-coded to threshold level. Use the selectors to switch GPU and time window.</p>
+        <div class="help-tip"><strong>Tip:</strong> Install pynvml to get live data from your RTX 4060 and A1000:<br><code style="background:rgba(0,204,255,0.1);padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:12px">pip install pynvml --break-system-packages</code><br>Then restart uvicorn — the tab will switch from Synthetic to Live NVML automatically.</div>
+      </div>`
+  }
+
+};
+
+let _helpOpen = false;
+let _currentHelpTab = 'overview';
+
+function toggleHelp() {
+  _helpOpen ? closeHelp() : openHelp();
+}
+
+function openHelp() {
+  _helpOpen = true;
+  document.getElementById('help-overlay').style.display = 'block';
+  document.getElementById('help-drawer').style.display = 'block';
+  // sync to current dashboard tab
+  const activeTab = document.querySelector('.tab.active');
+  if (activeTab) {
+    const tabName = activeTab.getAttribute('onclick').match(/'(\w+)'/)[1];
+    showHelpTab(tabName);
+  } else {
+    showHelpTab('overview');
+  }
+}
+
+function closeHelp() {
+  _helpOpen = false;
+  document.getElementById('help-overlay').style.display = 'none';
+  document.getElementById('help-drawer').style.display = 'none';
+}
+
+function showHelpTab(name, btn) {
+  _currentHelpTab = name;
+  const data = HELP_CONTENT[name];
+  if (!data) return;
+  document.getElementById('help-tab-label').textContent = data.label;
+  document.getElementById('help-content').innerHTML = data.html;
+  document.querySelectorAll('.help-tab-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  else {
+    document.querySelectorAll('.help-tab-btn').forEach(b => {
+      if (b.getAttribute('onclick').includes(`'${name}'`)) b.classList.add('active');
+    });
+  }
+}
+
+// Auto-sync help drawer when switching main tabs is handled in the consolidated switchTab above.
+
+// ═══════════════════════════════════════════════════════
+//  PHASE 8 — CARBON INTENSITY
+// ═══════════════════════════════════════════════════════
+let carbonParetoChart  = null;
+let carbonHistoryChart = null;
+let carbonWeightVal    = 0.5;   // 0=carbon only, 1=cost only
+let carbonAutoInterval = null;
+
+// Fuel source display config
+const FUEL_CONFIG = {
+  // Renewables
+  wind:                   { icon: '💨', color: '#00ccff', label: 'Wind' },
+  solar:                  { icon: '☀️', color: '#ffdd44', label: 'Solar' },
+  hydro:                  { icon: '💧', color: '#44aaff', label: 'Hydro' },
+  hydro_discharge:        { icon: '💧', color: '#44aaff', label: 'Hydro' },
+  geothermal:             { icon: '🌋', color: '#ff8844', label: 'Geothermal' },
+  biomass:                { icon: '🌿', color: '#88cc44', label: 'Biomass' },
+  wind_offshore:          { icon: '🌊', color: '#0099cc', label: 'Offshore Wind' },
+  // Storage
+  battery:                { icon: '🔋', color: '#66ddcc', label: 'Battery' },
+  battery_discharge:      { icon: '🔋', color: '#66ddcc', label: 'Battery' },
+  // Low carbon
+  nuclear:                { icon: '⚛️',  color: '#bf7fff', label: 'Nuclear' },
+  // Fossil
+  gas:                    { icon: '🔥', color: '#ff9944', label: 'Gas' },
+  coal:                   { icon: '⬛', color: '#888888', label: 'Coal' },
+  oil:                    { icon: '🛢️', color: '#aa6633', label: 'Oil' },
+  // Imports / other
+  hydro_run_of_river:     { icon: '💧', color: '#44aaff', label: 'Hydro' },
+  imports:                { icon: '🔄', color: '#778899', label: 'Imports' },
+  exports:                { icon: '🔄', color: '#778899', label: 'Exports' },
+  other_renewables:       { icon: '🌱', color: '#77bb55', label: 'Other RE' },
+  other:                  { icon: '❓', color: '#555577', label: 'Other' },
+  unknown:                { icon: '❓', color: '#555577', label: 'Other' },
+};
+
+// ── Load overview carbon KPIs (called from loadCarbon) ─────────────────────
+async function loadCarbonOverviewKPIs() {
+  try {
+    const d = await apiFetch('/carbon/snapshot');
+    const caiso = d.zones?.CAISO;
+    if (caiso) {
+      const ci = caiso.carbon_intensity;
+      document.getElementById('kpi-carbon-val').textContent = Math.round(ci);
+      document.getElementById('kpi-carbon-val').style.color = caiso.carbon_color;
+      document.getElementById('kpi-carbon-label').textContent = caiso.carbon_label;
+      document.getElementById('kpi-carbon-label').className =
+        'kpi-delta ' + (ci < 150 ? 'pos' : ci < 300 ? 'neu' : 'neg');
+    }
+    if (d.cleanest_iso) {
+      document.getElementById('kpi-cleanest-val').textContent = d.cleanest_iso;
+      document.getElementById('kpi-cleanest-ci').textContent =
+        Math.round(d.cleanest_ci) + ' gCO₂eq/kWh';
+      document.getElementById('kpi-cleanest-label').textContent =
+        d.zones?.[d.cleanest_iso]?.carbon_label || '';
+      document.getElementById('kpi-cleanest-label').className = 'kpi-delta pos';
+    }
+  } catch(e) {
+    console.warn('Carbon overview KPIs:', e);
+  }
+}
+
+// ── Load full carbon tab ────────────────────────────────────────────────────
+async function loadCarbon() {
+  await Promise.all([
+    loadCarbonSnapshot(),
+    loadCarbonRecommendation(),
+    loadCarbonHistory('CAISO'),
+  ]);
+}
+
+// ── Zone cards + Pareto ─────────────────────────────────────────────────────
+async function loadCarbonSnapshot() {
+  try {
+    const d = await apiFetch('/carbon/snapshot');
+    renderZoneCards(d);
+    await loadCarbonPareto();
+  } catch(e) {
+    document.getElementById('carbon-zone-cards').innerHTML =
+      `<div style="color:var(--red);font-size:14px;grid-column:span 5">
+        Failed to load carbon data. Check that the Electricity Maps API key is set in ~/energia/.env and uvicorn has been restarted.
+       </div>`;
+    console.warn('Carbon snapshot:', e);
+  }
+}
+
+function renderZoneCards(d) {
+  const zones = d.zones || {};
+  const cleanest = d.cleanest_iso;
+  const html = Object.entries(zones).map(([iso, z]) => {
+    const isCleanest = iso === cleanest;
+    const ci = Math.round(z.carbon_intensity);
+    const ff = z.fossil_free_pct != null ? Math.round(z.fossil_free_pct) + '% fossil free' : '';
+    const est = z.is_estimated || z.is_fallback ? '<span style="font-size:10px;color:var(--muted);font-family:var(--mono)"> est.</span>' : '';
+    const crownBorder = isCleanest
+      ? 'border-color:rgba(0,255,136,0.6);box-shadow:0 0 20px rgba(0,255,136,0.2)'
+      : '';
+    return `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;
+                  padding:18px 16px;transition:all 0.25s;cursor:default;${crownBorder}"
+           onmouseover="this.style.transform='translateY(-3px)'"
+           onmouseout="this.style.transform='translateY(0)'">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase">${iso}</div>
+          ${isCleanest ? '<div style="font-size:11px;color:var(--green);font-weight:700">🌱 CLEANEST</div>' : ''}
+        </div>
+        <div style="font-size:34px;font-weight:700;color:${z.carbon_color};font-family:var(--mono);line-height:1;margin-bottom:4px">${ci}${est}</div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:10px">gCO₂eq/kWh</div>
+        <div style="display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;
+                    background:${z.carbon_color}22;color:${z.carbon_color};border:1px solid ${z.carbon_color}44">
+          ${z.carbon_label}
+        </div>
+        ${ff ? `<div style="font-size:11px;color:var(--muted);margin-top:8px;font-family:var(--mono)">${ff}</div>` : ''}
+      </div>`;
+  }).join('');
+  document.getElementById('carbon-zone-cards').innerHTML = html || '<div style="color:var(--muted);font-size:14px;grid-column:span 5">No zone data.</div>';
+}
+
+// ── Pareto chart ────────────────────────────────────────────────────────────
+async function loadCarbonPareto() {
+  try {
+    const d = await apiFetch('/carbon/pareto');
+    renderParetoChart(d);
+    renderCarbonRecommendationFromPareto(d, carbonWeightVal);
+  } catch(e) {
+    console.warn('Carbon pareto:', e);
+  }
+}
+
+function renderParetoChart(d) {
+  const points = d.points || [];
+  if (!points.length) return;
+
+  const datasets = [{
+    label: 'Grid Zones',
+    data: points.map(p => ({ x: p.price_usd_kwh * 1000, y: p.carbon_intensity, iso: p.iso, label: p.label, pareto: p.on_pareto_frontier, color: p.carbon_color })),
+    backgroundColor: points.map(p => p.on_pareto_frontier ? p.carbon_color : p.carbon_color + '55'),
+    borderColor: points.map(p => p.on_pareto_frontier ? p.carbon_color : p.carbon_color + '88'),
+    borderWidth: points.map(p => p.on_pareto_frontier ? 2 : 1),
+    pointRadius: points.map(p => p.on_pareto_frontier ? 10 : 7),
+    pointHoverRadius: 13,
+  }];
+
+  const ctx = document.getElementById('carbon-pareto-chart').getContext('2d');
+  if (carbonParetoChart) {
+    carbonParetoChart.data.datasets = datasets;
+    carbonParetoChart.update('none');
+    return;
+  }
+  carbonParetoChart = new Chart(ctx, {
+    type: 'bubble',
+    data: { datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0f1425',
+          titleColor: '#e8edf5',
+          bodyColor: '#a0aec0',
+          borderColor: 'rgba(0,255,136,0.3)',
+          borderWidth: 1,
+          callbacks: {
+            title: items => items[0].raw.label,
+            label: item => {
+              const r = item.raw;
+              return [
+                ` Price: $${(r.x/1000).toFixed(4)}/kWh`,
+                ` Carbon: ${Math.round(r.y)} gCO₂eq/kWh`,
+                r.pareto ? ' ★ Pareto optimal' : '',
+              ].filter(Boolean);
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Price (¢/kWh)', color: '#6b7a99', font: { size: 11 } },
+          ticks: { color: '#6b7a99', font: { size: 10, family: 'JetBrains Mono' }, callback: v => v + '¢' },
+          grid: { color: 'rgba(255,255,255,0.06)' }
+        },
+        y: {
+          title: { display: true, text: 'Carbon (gCO₂eq/kWh)', color: '#6b7a99', font: { size: 11 } },
+          ticks: { color: '#6b7a99', font: { size: 10, family: 'JetBrains Mono' } },
+          grid: { color: 'rgba(255,255,255,0.06)' }
+        }
+      }
+    }
+  });
+
+  // Add ISO labels as annotations via afterDraw plugin
+  carbonParetoChart._isoLabels = points;
+}
+
+// ── Slider handler ──────────────────────────────────────────────────────────
+function onCarbonWeightChange(val) {
+  const costW = val / 100;
+  const carbW = 1 - costW;
+  carbonWeightVal = costW;
+  const label = costW === 1 ? '100% Cost' : carbW === 1 ? '100% Carbon' :
+    `${Math.round(costW*100)}% Cost / ${Math.round(carbW*100)}% Carbon`;
+  document.getElementById('carbon-weight-label').textContent = label;
+  // Re-fetch recommendation with new weight
+  loadCarbonRecommendation(costW);
+}
+
+// ── Recommendation ──────────────────────────────────────────────────────────
+async function loadCarbonRecommendation(costWeight = 0.5) {
+  const el = document.getElementById('carbon-rec-block');
+  try {
+    const d = await apiFetch(`/carbon/recommend?cost_weight=${costWeight}`);
+    if (d.status !== 'ok') {
+      el.innerHTML = `<div style="color:var(--muted);font-size:14px;padding:20px 0">${d.error || 'No recommendation available.'}</div>`;
+      return;
+    }
+
+    const ff = d.fossil_free_pct != null ? `${Math.round(d.fossil_free_pct)}% fossil free` : '';
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div style="background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.25);border-radius:10px;padding:16px;text-align:center">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Recommended Zone</div>
+          <div style="font-size:22px;font-weight:800;color:var(--green);font-family:var(--mono)">${d.recommended_iso}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:4px">${d.recommended_label}</div>
+          ${ff ? `<div style="font-size:11px;color:var(--muted);margin-top:6px;font-family:var(--mono)">${ff}</div>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="background:var(--surface2);border-radius:8px;padding:12px">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Price</div>
+            <div style="font-size:20px;font-weight:700;color:var(--cyan);font-family:var(--mono)">$${d.price_usd_kwh.toFixed(4)}<span style="font-size:12px;color:var(--muted)">/kWh</span></div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:12px">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Carbon</div>
+            <div style="font-size:20px;font-weight:700;font-family:var(--mono)" style="color:${d.carbon_color}">${Math.round(d.carbon_intensity)}<span style="font-size:12px;color:var(--muted)"> gCO₂/kWh</span></div>
+            <div style="display:inline-block;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;margin-top:4px;
+                        background:${d.carbon_color}22;color:${d.carbon_color};border:1px solid ${d.carbon_color}44">${d.carbon_label}</div>
+          </div>
+        </div>
+      </div>
+      <div style="background:rgba(0,204,255,0.06);border-left:3px solid var(--cyan);border-radius:0 8px 8px 0;padding:12px 16px;margin-bottom:14px">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Reasoning</div>
+        <div style="font-size:14px;color:var(--text2);line-height:1.6">${d.reasoning}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        ${Object.entries({ 'Cost Only': 1.0, 'Balanced': 0.5, 'Carbon Only': 0.0 }).map(([label, w]) => {
+          const rec = d.all_zones ? getRecommendedForWeight(d.all_zones, w) : null;
+          return rec ? `
+            <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">${label}</div>
+              <div style="font-size:14px;font-weight:700;color:var(--green);font-family:var(--mono)">${rec}</div>
+            </div>` : '';
+        }).join('')}
+      </div>`;
+  } catch(e) {
+    el.innerHTML = `<div style="color:var(--red);font-size:14px;padding:20px 0">Failed to load recommendation.</div>`;
+    console.warn('Carbon recommend:', e);
+  }
+}
+
+function getRecommendedForWeight(zones, costW) {
+  // Simple client-side recommendation for the 3 alternate weight cards
+  // Uses normalized fallback if API data available
+  const entries = Object.entries(zones);
+  if (!entries.length) return null;
+  const carbW = 1 - costW;
+  const minP = Math.min(...entries.map(([,z]) => z.carbon_intensity || 999));
+  const maxP = Math.max(...entries.map(([,z]) => z.carbon_intensity || 0));
+  // We only have carbon here on overview, so just return cleanest/dirtiest
+  if (costW === 0) return entries.reduce((a, b) => a[1].carbon_intensity < b[1].carbon_intensity ? a : b)[0];
+  if (costW === 1) return '(see price tab)';
+  return entries.reduce((a, b) => a[1].carbon_intensity < b[1].carbon_intensity ? a : b)[0];
+}
+
+// ── 24h History ─────────────────────────────────────────────────────────────
+async function loadCarbonHistory(iso) {
+  const statusEl = document.getElementById('carbon-history-status');
+  const statsEl  = document.getElementById('carbon-history-stats');
+  const mixEl    = document.getElementById('carbon-fuel-mix');
+  const mixIsoEl = document.getElementById('carbon-mix-iso');
+
+  statusEl.textContent = 'Loading...';
+  mixIsoEl.textContent = iso;
+
+  try {
+    const d = await apiFetch(`/carbon/history/${iso}`);
+    const history = d.history || [];
+
+    if (!history.length) {
+      statusEl.textContent = 'No history data available.';
+      return;
+    }
+
+    const labels = history.map(h => {
+      const dt = new Date(h.datetime);
+      return dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    });
+    const values = history.map(h => h.carbon_intensity);
+    const colors = history.map(h => h.carbon_color);
+
+    const ctx = document.getElementById('carbon-history-chart').getContext('2d');
+    if (carbonHistoryChart) {
+      carbonHistoryChart.data.labels = labels;
+      carbonHistoryChart.data.datasets[0].data = values;
+      carbonHistoryChart.data.datasets[0].pointBackgroundColor = colors;
+      carbonHistoryChart.update('none');
+    } else {
+      carbonHistoryChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            borderColor: '#00ccff',
+            backgroundColor: 'rgba(0,204,255,0.06)',
+            borderWidth: 2,
+            pointRadius: 4,
+            pointBackgroundColor: colors,
+            pointBorderColor: 'transparent',
+            fill: true,
+            tension: 0.35,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0f1425',
+              titleColor: '#e8edf5',
+              bodyColor: '#a0aec0',
+              borderColor: 'rgba(0,204,255,0.3)',
+              borderWidth: 1,
+              callbacks: { label: c => ` ${Math.round(c.parsed.y)} gCO₂eq/kWh` }
+            }
+          },
+          scales: {
+            x: { ticks: { color: '#6b7a99', font: { size: 9, family: 'JetBrains Mono' }, maxTicksLimit: 12 }, grid: { display: false } },
+            y: { ticks: { color: '#6b7a99', font: { size: 10, family: 'JetBrains Mono' }, callback: v => v + ' g' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+          }
+        }
+      });
+    }
+
+    // Stats bar
+    const avg = Math.round(values.reduce((a,b) => a+b,0) / values.length);
+    const min = Math.round(Math.min(...values));
+    const max = Math.round(Math.max(...values));
+    statsEl.innerHTML = [
+      ['Avg', avg, '#a0aec0'],
+      ['Min', min, '#00ff88'],
+      ['Max', max, '#ff6644'],
+      ['Points', values.length, '#00ccff'],
+    ].map(([l,v,c]) => `
+      <div style="font-family:var(--mono);font-size:12px;color:var(--muted)">
+        ${l}: <span style="color:${c};font-weight:700">${v}${l !== 'Points' ? ' g' : ''}</span>
+      </div>`).join('');
+
+    statusEl.textContent = `${values.length} hourly points`;
+
+    // Load fuel mix for this zone from snapshot
+    loadFuelMix(iso);
+
+  } catch(e) {
+    statusEl.textContent = 'Error loading history.';
+    console.warn('Carbon history:', e);
+  }
+}
+
+async function loadFuelMix(iso) {
+  const el = document.getElementById('carbon-fuel-mix');
+  try {
+    const snap = await apiFetch('/carbon/snapshot');
+    const zone = snap.zones?.[iso];
+    const mix  = zone?.fuel_mix || {};
+    const entries = Object.entries(mix).sort((a,b) => b[1]-a[1]);
+
+    if (!entries.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:13px">Fuel mix data not available from API.</div>';
+      return;
+    }
+
+    // Merge all unknown/unrecognised fuels into a single "Other" bucket
+    const merged = {};
+    for (const [fuel, pct] of entries) {
+      const cfg = FUEL_CONFIG[fuel];
+      if (cfg && fuel !== 'unknown') {
+        merged[fuel] = (merged[fuel] || 0) + pct;
+      } else {
+        merged['__other__'] = (merged['__other__'] || 0) + pct;
+      }
+    }
+    // Add Other bucket last if non-zero
+    const finalEntries = Object.entries(merged)
+      .filter(([, pct]) => pct >= 0.5)           // hide anything under 0.5%
+      .sort((a, b) => b[1] - a[1]);
+
+    el.innerHTML = finalEntries.map(([fuel, pct]) => {
+      const cfg = fuel === '__other__'
+        ? { icon: '❓', color: '#555577', label: 'Other' }
+        : FUEL_CONFIG[fuel];
+      return `
+        <div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:13px;color:var(--text2)">${cfg.icon} ${cfg.label}</span>
+            <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:${cfg.color}">${pct.toFixed(1)}%</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.06);border-radius:3px;height:6px;overflow:hidden">
+            <div style="height:100%;width:${Math.min(pct,100)}%;background:${cfg.color};border-radius:3px;transition:width 0.6s ease"></div>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px">Failed to load fuel mix.</div>';
+  }
+}
+
+function renderCarbonRecommendationFromPareto(d, costW) { /* handled via loadCarbonRecommendation */ }
+
+// ═══════════════════════════════════════════════════════
+//  END PHASE 8
+// ═══════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════
+//  PHASE 9 — MULTI-SITE FLEET ORCHESTRATION
+// ═══════════════════════════════════════════════════════
+let fleetScoresChart = null;
+
+async function loadFleet() {
+  await Promise.all([
+    loadFleetSummary(),
+    loadFleetHistory(),
+  ]);
+  // Auto-run a default route so the score chart is never empty on first open
+  if (!fleetScoresChart) {
+    await runFleetRoute();
+  }
+}
+
+// ── Fleet summary + site cards ──────────────────────────────────────────────
+async function loadFleetSummary() {
+  try {
+    const d = await apiFetch('/fleet/summary');
+    renderFleetKPIs(d);
+    renderFleetSiteCards(d.sites || []);
+  } catch(e) {
+    document.getElementById('fleet-site-cards').innerHTML =
+      '<div style="color:var(--red);font-size:14px;grid-column:span 5">Failed to load fleet. Run api_patch_phase9.py and restart uvicorn.</div>';
+    console.warn('Fleet summary:', e);
+  }
+}
+
+function renderFleetKPIs(d) {
+  document.getElementById('fleet-kpi-sites').textContent  = d.total_sites || '—';
+  document.getElementById('fleet-kpi-online').textContent = d.online_sites + ' online';
+  document.getElementById('fleet-kpi-online').className   = 'kpi-delta pos';
+  document.getElementById('fleet-kpi-racks').textContent  = d.total_racks || '—';
+  document.getElementById('fleet-kpi-capacity').textContent = d.fleet_capacity_pct + '% utilized';
+  document.getElementById('fleet-kpi-capacity').className =
+    d.fleet_capacity_pct > 80 ? 'kpi-delta warn' : 'kpi-delta neu';
+
+  const sites = d.sites || [];
+  if (sites.length) {
+    const cleanest = sites.slice().sort((a,b) => a.carbon_gco2 - b.carbon_gco2)[0];
+    const cheapest = sites.slice().sort((a,b) => a.price_usd_kwh - b.price_usd_kwh)[0];
+    document.getElementById('fleet-kpi-cleanest').textContent       = cleanest.iso;
+    document.getElementById('fleet-kpi-cleanest-ci').textContent    = Math.round(cleanest.carbon_gco2) + ' gCO₂/kWh · ' + cleanest.carbon_label;
+    document.getElementById('fleet-kpi-cheapest').textContent       = cheapest.iso;
+    document.getElementById('fleet-kpi-cheapest-price').textContent = '$' + cheapest.price_usd_kwh.toFixed(4) + '/kWh';
+  }
+}
+
+function renderFleetSiteCards(sites) {
+  const cheapest  = Math.min(...sites.map(s => s.price_usd_kwh));
+  const cleanest  = Math.min(...sites.map(s => s.carbon_gco2));
+  const html = sites.map(site => {
+    const isCheapest = site.price_usd_kwh === cheapest;
+    const isCleanest = site.carbon_gco2   === cleanest;
+    const badge = isCleanest && isCheapest
+      ? '<span style="font-size:10px;color:var(--green);font-weight:700">🌱💰 BEST</span>'
+      : isCleanest
+      ? '<span style="font-size:10px;color:var(--green);font-weight:700">🌱 CLEANEST</span>'
+      : isCheapest
+      ? '<span style="font-size:10px;color:var(--cyan);font-weight:700">💰 CHEAPEST</span>'
+      : '';
+    const loadColor = site.capacity_pct > 80 ? '#ff6644' : site.capacity_pct > 60 ? '#ffaa00' : '#00ff88';
+    const statusDot = site.online
+      ? '<span style="color:#00ff88;font-size:10px">● ONLINE</span>'
+      : '<span style="color:#ff4444;font-size:10px">● OFFLINE</span>';
+    const ff = site.fossil_free_pct != null ? Math.round(site.fossil_free_pct) + '% FF' : '';
+    return `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;
+                  transition:all 0.25s;cursor:default"
+           onmouseover="this.style.transform='translateY(-3px)';this.style.borderColor='rgba(0,255,136,0.4)'"
+           onmouseout="this.style.transform='';this.style.borderColor='var(--border)'">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text)">${site.name}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">${site.location}</div>
+          </div>
+          <div style="text-align:right">${badge}<br>${statusDot}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div style="background:var(--surface2);border-radius:7px;padding:8px">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Price</div>
+            <div style="font-size:16px;font-weight:700;color:var(--cyan);font-family:var(--mono)">$${site.price_usd_kwh.toFixed(4)}</div>
+            <div style="font-size:10px;color:var(--muted)">per kWh</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:7px;padding:8px">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Carbon</div>
+            <div style="font-size:16px;font-weight:700;font-family:var(--mono);color:${site.carbon_color}">${Math.round(site.carbon_gco2)}</div>
+            <div style="font-size:10px;color:var(--muted)">gCO₂/kWh${ff ? ' · ' + ff : ''}</div>
+          </div>
+        </div>
+        <div style="margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+            <span style="color:var(--muted)">Capacity</span>
+            <span style="color:${loadColor};font-family:var(--mono);font-weight:700">${site.capacity_pct}%</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.07);border-radius:3px;height:5px">
+            <div style="height:100%;width:${site.capacity_pct}%;background:${loadColor};border-radius:3px;transition:width 0.6s"></div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">
+          <span>${site.num_racks} racks · PUE ${site.pue}</span>
+          <span>Tier ${site.tier || 3}</span>
+        </div>
+      </div>`;
+  }).join('');
+  document.getElementById('fleet-site-cards').innerHTML = html;
+}
+
+// ── Workload routing ─────────────────────────────────────────────────────────
+async function runFleetRoute() {
+  const btn = document.querySelector('[onclick="runFleetRoute()"]');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Routing...';
+  const resultEl = document.getElementById('fleet-route-result');
+  resultEl.innerHTML = '';
+
+  const body = {
+    job_type:     document.getElementById('fleet-job-type').value,
+    duration_min: parseInt(document.getElementById('fleet-duration').value),
+    gpu_count:    parseInt(document.getElementById('fleet-gpus').value),
+    priority:     document.getElementById('fleet-priority').value,
+  };
+
+  try {
+    const d = await fetch('/api/v1/fleet/route', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    }).then(r => r.json());
+
+    if (d.status !== 'ok') {
+      resultEl.innerHTML = `<div style="color:var(--red);font-size:14px">${d.message || 'Routing failed.'}</div>`;
+      return;
+    }
+
+    const r = d.recommended_site;
+    resultEl.innerHTML = `
+      <div style="background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.25);border-radius:10px;padding:16px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div>
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Recommended Site</div>
+            <div style="font-size:20px;font-weight:800;color:var(--green)">${r.name}</div>
+            <div style="font-size:12px;color:var(--text2)">${r.iso} · ${r.location}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:28px;font-weight:800;color:var(--green);font-family:var(--mono)">${r.composite_score}</div>
+            <div style="font-size:11px;color:var(--muted)">composite score</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">
+          ${[
+            ['Est. Cost', '$' + r.estimated_cost_usd.toFixed(3), 'var(--cyan)'],
+            ['Est. Carbon', r.estimated_carbon_g.toFixed(0) + 'g CO₂', r.carbon_color],
+            ['Cost Save', d.cost_saving_pct + '%', 'var(--green)'],
+            ['CO₂ Save', d.carbon_saving_pct + '%', 'var(--green)'],
+          ].map(([l,v,c]) => `
+            <div style="background:var(--surface2);border-radius:7px;padding:10px;text-align:center">
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">${l}</div>
+              <div style="font-size:15px;font-weight:700;font-family:var(--mono);color:${c}">${v}</div>
+            </div>`).join('')}
+        </div>
+        <div style="background:rgba(0,204,255,0.06);border-left:3px solid var(--cyan);padding:10px 14px;border-radius:0 7px 7px 0;font-size:13px;color:var(--text2);line-height:1.6">
+          ${r.reasoning}
+        </div>
+      </div>`;
+
+    renderFleetScoresChart(d.all_sites, d.weights, d.priority);
+    loadFleetHistory();
+
+  } catch(e) {
+    resultEl.innerHTML = `<div style="color:var(--red);font-size:14px">Request failed: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-route"></i> Route Workload';
+  }
+}
+
+// ── Scores bar chart ─────────────────────────────────────────────────────────
+function renderFleetScoresChart(sites, weights, priority) {
+  const labels  = sites.map(s => s.iso);
+  const scores  = sites.map(s => s.composite_score);
+  const colors  = sites.map((s, i) => i === 0 ? '#00ff88' : 'rgba(0,204,255,0.45)');
+  const borders = sites.map((s, i) => i === 0 ? '#00ff88' : 'rgba(0,204,255,0.7)');
+
+  const ctx = document.getElementById('fleet-scores-chart').getContext('2d');
+  const placeholder = document.getElementById('fleet-chart-placeholder');
+  if (placeholder) placeholder.style.display = 'none';
+  if (fleetScoresChart) {
+    fleetScoresChart.data.labels = labels;
+    fleetScoresChart.data.datasets[0].data   = scores;
+    fleetScoresChart.data.datasets[0].backgroundColor = colors;
+    fleetScoresChart.data.datasets[0].borderColor     = borders;
+    fleetScoresChart.update();
+    return;
+  }
+  fleetScoresChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: scores,
+        backgroundColor: colors,
+        borderColor: borders,
+        borderWidth: 2,
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 600 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0f1425',
+          titleColor: '#e8edf5',
+          bodyColor: '#a0aec0',
+          borderColor: 'rgba(0,255,136,0.3)',
+          borderWidth: 1,
+          callbacks: {
+            label: c => ` Score: ${c.parsed.y.toFixed(1)} / 100`,
+            afterLabel: (c) => {
+              const s = sites[c.dataIndex];
+              return [
+                ` Price score:    ${s.price_score}`,
+                ` Carbon score:   ${s.carbon_score}`,
+                ` Capacity score: ${s.capacity_score}`,
+                ` PUE score:      ${s.pue_score}`,
+              ];
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#6b7a99', font: { size: 11, family: 'JetBrains Mono' } }, grid: { display: false } },
+        y: {
+          min: 0, max: 100,
+          ticks: { color: '#6b7a99', font: { size: 10, family: 'JetBrains Mono' }, callback: v => v },
+          grid: { color: 'rgba(255,255,255,0.05)' }
+        }
+      }
+    }
+  });
+
+  // Show weights breakdown
+  if (weights) {
+    const wEl = document.getElementById('fleet-weights-display');
+    wEl.innerHTML = `<span style="color:var(--text2);font-size:12px">Priority: <strong style="color:var(--green)">${priority}</strong></span>` +
+      Object.entries(weights).map(([k,v]) =>
+        `<span>${k}: <strong style="color:var(--cyan);font-family:var(--mono)">${Math.round(v*100)}%</strong></span>`
+      ).join('');
+  }
+}
+
+// ── Routing history ──────────────────────────────────────────────────────────
+async function loadFleetHistory() {
+  try {
+    const d = await apiFetch('/fleet/history?limit=20');
+    const rows = d.history || [];
+    const tbody = document.getElementById('fleet-history-body');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="color:var(--muted);padding:20px 12px;text-align:center">No routing history yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(r => {
+      const dt  = new Date(r.datetime);
+      const time = dt.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:false});
+      const date = dt.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+      const chosen = (r.all_scores || []).find(s => s.site_id === r.chosen_site);
+      const iso = chosen ? chosen.iso : r.chosen_site;
+      const score = r.score ? r.score.toFixed(1) : '—';
+      return `<tr>
+        <td style="padding:10px 12px;font-family:var(--mono);font-size:12px;color:var(--muted)">${date} ${time}</td>
+        <td style="padding:10px 12px;font-size:13px;color:var(--text)">${r.job_type || '—'}</td>
+        <td style="padding:10px 12px;font-family:var(--mono);font-size:12px;color:var(--cyan)">${r.gpu_count || '—'}</td>
+        <td style="padding:10px 12px;font-family:var(--mono);font-size:12px;color:var(--muted)">${r.duration_min || '—'}min</td>
+        <td style="padding:10px 12px;font-size:13px;font-weight:700;color:var(--green)">${iso}</td>
+        <td style="padding:10px 12px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--cyan)">${score}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    console.warn('Fleet history:', e);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  END PHASE 9
+// ═══════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════
+//  PHASE 10 — GPU HARDWARE MONITORING
+// ═══════════════════════════════════════════════════════
+let hwTempChart  = null;
+let hwPowerChart = null;
+let hwAutoTimer  = null;
+
+async function loadHardware() {
+  await Promise.all([
+    loadHWSnapshot(),
+    loadHWAlerts(),
+    loadHWHistory(0),
+  ]);
+}
+
+// ── Snapshot ─────────────────────────────────────────────────────────────────
+async function loadHWSnapshot() {
+  try {
+    const d = await apiFetch('/hardware/snapshot');
+    renderHWKPIs(d);
+    renderGPUCards(d.gpus || []);
+    populateGPUSelector(d.gpus || []);
+  } catch(e) {
+    document.getElementById('hw-gpu-cards').innerHTML =
+      `<div style="color:var(--red);font-size:14px;grid-column:span 2">
+        Failed to load GPU telemetry. Run api_patch_phase10.py and restart uvicorn.
+       </div>`;
+    console.warn('HW snapshot:', e);
+  }
+}
+
+function renderHWKPIs(d) {
+  const gpus = d.gpus || [];
+  document.getElementById('hw-kpi-count').textContent  = d.gpu_count || '—';
+  document.getElementById('hw-kpi-mode').textContent   = d.nvml_live ? '🔴 Live NVML' : '🔵 Synthetic mode';
+  document.getElementById('hw-kpi-mode').className     = 'kpi-delta ' + (d.nvml_live ? 'pos' : 'neu');
+
+  const health = d.avg_health_score || 0;
+  document.getElementById('hw-kpi-health').textContent = health.toFixed(1) + ' / 100';
+  document.getElementById('hw-kpi-health').style.color = health >= 85 ? 'var(--green)' : health >= 65 ? '#ffaa00' : '#ff4444';
+  const sevMap = { normal:'✓ All Healthy', warning:'⚠ Warning', critical:'✗ Critical' };
+  document.getElementById('hw-kpi-severity').textContent = sevMap[d.fleet_severity] || d.fleet_severity;
+  document.getElementById('hw-kpi-severity').className   = 'kpi-delta ' + (d.fleet_severity === 'normal' ? 'pos' : d.fleet_severity === 'warning' ? 'warn' : 'neg');
+
+  if (gpus.length) {
+    const maxTemp  = Math.max(...gpus.map(g => g.temp_c));
+    const maxGpu   = gpus.find(g => g.temp_c === maxTemp);
+    document.getElementById('hw-kpi-temp').textContent  = maxTemp.toFixed(0) + '°C';
+    document.getElementById('hw-kpi-temp').style.color  = maxTemp >= 88 ? '#ff4444' : maxTemp >= 78 ? '#ffaa00' : 'var(--cyan)';
+    document.getElementById('hw-kpi-temp-label').textContent = maxGpu ? maxGpu.gpu_name.replace('NVIDIA ','').replace('GeForce ','') : '';
+
+    const totalPow = gpus.reduce((s, g) => s + g.power_w, 0);
+    document.getElementById('hw-kpi-power').textContent  = totalPow.toFixed(0) + 'W';
+    document.getElementById('hw-kpi-power-label').textContent = gpus.map(g => g.power_pct.toFixed(0) + '% TDP').join(' · ');
+  }
+}
+
+function populateGPUSelector(gpus) {
+  const sel = document.getElementById('hw-history-gpu');
+  if (sel.options.length === gpus.length) return;
+  sel.innerHTML = gpus.map((g, i) =>
+    `<option value="${i}">GPU ${i}: ${g.gpu_name.replace('NVIDIA ','').replace('GeForce ','')}</option>`
+  ).join('');
+}
+
+function renderGPUCards(gpus) {
+  const cols = gpus.length <= 2 ? 'repeat(2,1fr)' : 'repeat(3,1fr)';
+  document.getElementById('hw-gpu-cards').style.gridTemplateColumns = cols;
+
+  document.getElementById('hw-gpu-cards').innerHTML = gpus.map(g => {
+    const tempColor  = g.temp_c >= 88 ? '#ff4444' : g.temp_c >= 78 ? '#ffaa00' : '#00ccff';
+    const powColor   = g.power_pct >= 100 ? '#ff4444' : g.power_pct >= 90 ? '#ffaa00' : '#00ff88';
+    const memColor   = g.mem_pct >= 98 ? '#ff4444' : g.mem_pct >= 90 ? '#ffaa00' : '#00ccff';
+    const healthColor = g.health_score >= 85 ? '#00ff88' : g.health_score >= 65 ? '#ffaa00' : '#ff4444';
+    const sevBg = g.severity === 'critical' ? 'rgba(255,68,68,0.12)' :
+                  g.severity === 'warning'  ? 'rgba(255,170,0,0.10)' :
+                  'rgba(0,255,136,0.06)';
+    const sevBorder = g.severity === 'critical' ? 'rgba(255,68,68,0.4)' :
+                      g.severity === 'warning'  ? 'rgba(255,170,0,0.35)' :
+                      'rgba(0,255,136,0.25)';
+    const sevBadge = g.severity === 'critical'
+      ? '<span style="background:#ff444422;color:#ff4444;border:1px solid #ff444444;padding:2px 9px;border-radius:8px;font-size:11px;font-weight:700">⚠ CRITICAL</span>'
+      : g.severity === 'warning'
+      ? '<span style="background:#ffaa0022;color:#ffaa00;border:1px solid #ffaa0044;padding:2px 9px;border-radius:8px;font-size:11px;font-weight:700">⚠ WARNING</span>'
+      : '<span style="background:#00ff8822;color:#00ff88;border:1px solid #00ff8844;padding:2px 9px;border-radius:8px;font-size:11px;font-weight:700">✓ HEALTHY</span>';
+
+    const anomalyBadge = g.anomaly
+      ? '<span style="background:#bf7fff22;color:#bf7fff;border:1px solid #bf7fff44;padding:2px 9px;border-radius:8px;font-size:11px;margin-left:6px">ANOMALY</span>'
+      : '';
+
+    const eccRow = g.ecc_single > 0 || g.ecc_double > 0
+      ? `<div style="background:rgba(255,68,68,0.08);border:1px solid rgba(255,68,68,0.25);border-radius:7px;padding:8px 12px;margin-top:10px;font-size:12px;color:#ff8888">
+           <i class="fa-solid fa-memory" style="margin-right:6px"></i>
+           ECC Errors — Single: ${g.ecc_single} · Double: ${g.ecc_double}
+         </div>`
+      : '';
+
+    const fanRow = g.fan_available
+      ? `<div class="info-row" style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+           <span class="label" style="font-size:12px;color:var(--muted)"><i class="fa-solid fa-fan"></i> Fan</span>
+           <span style="font-family:var(--mono);font-size:13px;color:var(--text2)">${g.fan_speed_pct.toFixed(0)}%</span>
+         </div>`
+      : '';
+
+    return `
+      <div style="background:${sevBg};border:1px solid ${sevBorder};border-radius:14px;padding:20px;transition:all 0.25s">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--text)">GPU ${g.gpu_idx}</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:3px">${g.gpu_name.replace('NVIDIA ','')}</div>
+            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px">${g.uuid.substring(0,16)}...</div>
+          </div>
+          <div style="text-align:right">${sevBadge}${anomalyBadge}</div>
+        </div>
+
+        <!-- Health score -->
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <div style="flex:1">
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px">
+              <span style="color:var(--muted)">Health Score</span>
+              <span style="color:${healthColor};font-family:var(--mono);font-weight:700">${g.health_score.toFixed(0)}/100</span>
+            </div>
+            <div style="background:rgba(255,255,255,0.07);border-radius:4px;height:7px">
+              <div style="height:100%;width:${g.health_score}%;background:${healthColor};border-radius:4px;transition:width 0.6s"></div>
+            </div>
+            <div style="font-size:11px;color:${healthColor};margin-top:4px">${g.health_status}</div>
+          </div>
+        </div>
+
+        <!-- Metrics grid -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+          <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Temp</div>
+            <div style="font-size:20px;font-weight:700;font-family:var(--mono);color:${tempColor}">${g.temp_c.toFixed(0)}°</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Power</div>
+            <div style="font-size:20px;font-weight:700;font-family:var(--mono);color:${powColor}">${g.power_w.toFixed(0)}W</div>
+            <div style="font-size:10px;color:var(--muted)">${g.power_pct.toFixed(0)}% TDP</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">GPU Util</div>
+            <div style="font-size:20px;font-weight:700;font-family:var(--mono);color:var(--cyan)">${g.gpu_util_pct.toFixed(0)}%</div>
+          </div>
+        </div>
+
+        <!-- Memory bar -->
+        <div style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+            <span style="color:var(--muted)">VRAM</span>
+            <span style="font-family:var(--mono);color:${memColor}">${g.mem_used_mb.toFixed(0)} / ${g.mem_total_mb.toFixed(0)} MB (${g.mem_pct.toFixed(0)}%)</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.07);border-radius:3px;height:5px">
+            <div style="height:100%;width:${g.mem_pct}%;background:${memColor};border-radius:3px;transition:width 0.6s"></div>
+          </div>
+        </div>
+
+        ${fanRow}
+
+        <!-- Clocks -->
+        <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--muted);font-family:var(--mono)">
+            GFX <span style="color:var(--text2)">${g.clock_graphics}MHz</span>
+          </span>
+          <span style="font-size:11px;color:var(--muted);font-family:var(--mono)">
+            MEM <span style="color:var(--text2)">${g.clock_memory}MHz</span>
+          </span>
+          <span style="font-size:11px;color:var(--muted);font-family:var(--mono)">
+            PCIe TX <span style="color:var(--text2)">${g.pcie_tx_mbps.toFixed(0)} MB/s</span>
+          </span>
+        </div>
+
+        ${eccRow}
+      </div>`;
+  }).join('');
+}
+
+// ── Telemetry history charts ──────────────────────────────────────────────────
+async function loadHWHistory(gpuIdx) {
+  const mins = parseInt(document.getElementById('hw-history-mins').value);
+  const statusEl = document.getElementById('hw-history-status');
+  statusEl.textContent = 'Loading...';
+  try {
+    const d = await apiFetch(`/hardware/history/${gpuIdx}?minutes=${mins}`);
+    const history = d.history || [];
+    if (!history.length) {
+      statusEl.textContent = 'No history yet — data accumulates as the monitor runs.';
+      return;
+    }
+    const labels  = history.map(h => {
+      const dt = new Date(h.datetime_iso);
+      return dt.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:false});
+    });
+    const temps  = history.map(h => h.temp_c);
+    const powers = history.map(h => h.power_w);
+    const tempColors = temps.map(t => t >= 88 ? '#ff4444' : t >= 78 ? '#ffaa00' : '#00ccff');
+
+    // Temperature chart
+    const tCtx = document.getElementById('hw-temp-chart').getContext('2d');
+    if (hwTempChart) {
+      hwTempChart.data.labels = labels;
+      hwTempChart.data.datasets[0].data = temps;
+      hwTempChart.data.datasets[0].pointBackgroundColor = tempColors;
+      hwTempChart.update('none');
+    } else {
+      hwTempChart = new Chart(tCtx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            data: temps,
+            borderColor: '#00ccff',
+            backgroundColor: 'rgba(0,204,255,0.07)',
+            borderWidth: 2,
+            pointRadius: 3,
+            pointBackgroundColor: tempColors,
+            pointBorderColor: 'transparent',
+            fill: true,
+            tension: 0.4,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0f1425', titleColor: '#e8edf5', bodyColor: '#a0aec0',
+              borderColor: 'rgba(0,204,255,0.3)', borderWidth: 1,
+              callbacks: { label: c => ` ${c.parsed.y.toFixed(1)}°C` }
+            },
+            annotation: {
+              annotations: {
+                warnLine: { type:'line', yMin:78, yMax:78, borderColor:'rgba(255,170,0,0.5)', borderWidth:1, borderDash:[4,4] },
+                critLine: { type:'line', yMin:88, yMax:88, borderColor:'rgba(255,68,68,0.5)', borderWidth:1, borderDash:[4,4] }
+              }
+            }
+          },
+          scales: {
+            x: { ticks: { color:'#6b7a99', font:{size:9, family:'JetBrains Mono'}, maxTicksLimit:10 }, grid:{display:false} },
+            y: { ticks: { color:'#6b7a99', font:{size:9, family:'JetBrains Mono'}, callback: v => v+'°' }, grid:{color:'rgba(255,255,255,0.05)'} }
+          }
+        }
+      });
+    }
+
+    // Power chart
+    const pCtx = document.getElementById('hw-power-chart').getContext('2d');
+    if (hwPowerChart) {
+      hwPowerChart.data.labels = labels;
+      hwPowerChart.data.datasets[0].data = powers;
+      hwPowerChart.update('none');
+    } else {
+      hwPowerChart = new Chart(pCtx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            data: powers,
+            borderColor: '#00ff88',
+            backgroundColor: 'rgba(0,255,136,0.07)',
+            borderWidth: 2,
+            pointRadius: 2,
+            pointBackgroundColor: '#00ff88',
+            pointBorderColor: 'transparent',
+            fill: true,
+            tension: 0.4,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0f1425', titleColor: '#e8edf5', bodyColor: '#a0aec0',
+              borderColor: 'rgba(0,255,136,0.3)', borderWidth: 1,
+              callbacks: { label: c => ` ${c.parsed.y.toFixed(1)}W` }
+            }
+          },
+          scales: {
+            x: { ticks: { color:'#6b7a99', font:{size:9, family:'JetBrains Mono'}, maxTicksLimit:10 }, grid:{display:false} },
+            y: { ticks: { color:'#6b7a99', font:{size:9, family:'JetBrains Mono'}, callback: v => v+'W' }, grid:{color:'rgba(255,255,255,0.05)'} }
+          }
+        }
+      });
+    }
+
+    statusEl.textContent = `${history.length} samples · last ${mins} min`;
+  } catch(e) {
+    statusEl.textContent = 'Failed to load history.';
+    console.warn('HW history:', e);
+  }
+}
+
+// ── Alerts ────────────────────────────────────────────────────────────────────
+async function loadHWAlerts() {
+  const el = document.getElementById('hw-alerts');
+  try {
+    const d = await apiFetch('/hardware/alerts?limit=30');
+    const alerts = d.alerts || [];
+    if (!alerts.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0"><i class="fa-solid fa-check-circle" style="color:var(--green);margin-right:8px"></i>No alerts — all GPUs healthy.</div>';
+      return;
+    }
+    el.innerHTML = alerts.map(a => {
+      const sevColor = a.severity === 'critical' ? '#ff4444' : a.severity === 'warning' ? '#ffaa00' : '#00ff88';
+      const sevIcon  = a.severity === 'critical' ? 'fa-circle-xmark' : a.severity === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-check';
+      const dt = new Date(a.datetime);
+      const time = dt.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
+      return `
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <i class="fa-solid ${sevIcon}" style="color:${sevColor};margin-top:2px;min-width:16px"></i>
+          <div style="flex:1">
+            <div style="font-size:13px;color:var(--text);line-height:1.5">${a.message}</div>
+            <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:3px">GPU ${a.gpu_idx} · ${time}</div>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px">Failed to load alerts.</div>';
+  }
+}
+
+// ── Auto-refresh ──────────────────────────────────────────────────────────────
+function startHWAutoRefresh() {
+  if (hwAutoTimer) return;
+  hwAutoTimer = setInterval(() => {
+    loadHWSnapshot();
+    loadHWAlerts();
+  }, 10000);
+}
+
+function stopHWAutoRefresh() {
+  if (hwAutoTimer) { clearInterval(hwAutoTimer); hwAutoTimer = null; }
+}
+
+// ═══════════════════════════════════════════════════════
+//  END PHASE 10
+// ═══════════════════════════════════════════════════════
+
+
+
+init();
+</script>
+</body>
+</html>

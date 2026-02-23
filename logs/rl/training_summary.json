@@ -1,0 +1,12 @@
+{
+  "run_name": "run_001",
+  "total_steps": 204800,
+  "elapsed_sec": 380.6,
+  "n_envs": 4,
+  "n_racks": 4,
+  "device": "cuda",
+  "final_model": "/home/manager/energia/models/rl/final_model.zip",
+  "best_model": "/home/manager/energia/models/rl/best_model.zip",
+  "status": "complete",
+  "completed_at": "2026-02-22T10:29:03"
+}
