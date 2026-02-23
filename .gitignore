@@ -1,4 +1,26 @@
+# Python / Virtual Environment
+__pycache__/
+*.py[cod]
+*$py.class
 bin/
 lib/
 include/
-__pycache__/
+lib64/
+share/
+pyvenv.cfg
+energia/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Simulation Data & Logs
+*.log
+*.csv
+*.dat
+*.h5
+*.hdf5
+*.xyz
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
