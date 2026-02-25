@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Energia — AI Data Center Energy Intelligence</title>
+<title>HexaGrid™ — AI Data Center Energy Intelligence</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -140,16 +140,16 @@
     display: flex; gap: 0;
   }
   .tab {
-    font-family: var(--font); font-size: 14px; font-weight: 500;
-    padding: 16px 22px; cursor: pointer;
+    font-family: var(--font); font-size: 15px; font-weight: 500;
+    padding: 16px 26px; cursor: pointer;
     color: var(--muted); border: none; background: none;
     border-bottom: 2px solid transparent;
     transition: all 0.2s; letter-spacing: 0.3px;
     display: flex; align-items: center; gap: 8px;
   }
   .tab:hover  { color: var(--cyan); }
-  .tab.active { color: var(--green); border-bottom-color: var(--green); }
-  .tab i { font-size: 13px; }
+  .tab.active { color: var(--green); border-bottom-color: var(--green); font-weight: 600; }
+  .tab i { font-size: 14px; }
 
   /* ── PAGE WRAPPER ── */
   .page { display: none; }
@@ -271,6 +271,7 @@
     color: var(--muted); letter-spacing: 1px; text-transform: uppercase;
     margin-bottom: 6px;
   }
+  select option { background: #1a1f35; color: #e8edf5; }
   .form-input {
     width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border2);
     border-radius: var(--radius-sm); color: var(--text);
@@ -467,6 +468,227 @@
   }
   .help-tip strong { color: var(--cyan); }
   .help-divider { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 20px 0; }
+
+/* ── ALERTS TAB ── */
+.alerts-config-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
+.alerts-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px 26px;box-shadow:var(--shadow-card);}
+.alerts-section.full{grid-column:span 2;}
+.alerts-field{margin-bottom:14px;}
+.alerts-field label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;font-weight:600;}
+.alerts-field input,.alerts-field select{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:9px 14px;color:var(--text);font-size:13px;font-family:var(--font);outline:none;transition:border-color 0.2s;}
+.alerts-field input:focus,.alerts-field select:focus{border-color:rgba(0,255,136,0.4);}
+.alerts-field input::placeholder{color:var(--muted);}
+.alerts-toggle{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.alerts-toggle input[type=checkbox]{width:16px;height:16px;accent-color:var(--green);cursor:pointer;}
+.alerts-toggle label{font-size:13px;color:var(--text2);cursor:pointer;}
+.alerts-save-btn{padding:10px 24px;background:rgba(0,255,136,0.1);color:var(--green);border:1px solid rgba(0,255,136,0.3);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;letter-spacing:0.3px;}
+.alerts-save-btn:hover{background:rgba(0,255,136,0.2);}
+.alerts-test-btn{padding:10px 24px;background:rgba(0,204,255,0.08);color:var(--cyan);border:1px solid rgba(0,204,255,0.3);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;margin-left:10px;}
+.alerts-test-btn:hover{background:rgba(0,204,255,0.15);}
+.alerts-status{font-size:12px;font-family:var(--mono);margin-top:10px;min-height:18px;}
+.alerts-status.ok{color:var(--green);}
+.alerts-status.err{color:var(--red);}
+/* Alert history log */
+.alert-log-entry{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.alert-log-entry:last-child{border-bottom:none;}
+.alert-log-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.alert-log-dot.critical{background:var(--red);box-shadow:0 0 6px var(--red);}
+.alert-log-dot.warning{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+.alert-log-dot.elevated{background:var(--cyan);}
+.alert-log-dot.info{background:var(--green);}
+.alert-log-title{font-size:13px;color:var(--text);font-weight:500;margin-bottom:3px;}
+.alert-log-meta{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.alert-log-delivery{display:flex;gap:6px;margin-top:4px;}
+.delivery-chip{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;}
+.delivery-chip.sent{background:rgba(0,255,136,0.1);color:var(--green);border:1px solid rgba(0,255,136,0.25);}
+.delivery-chip.fail{background:rgba(255,68,68,0.1);color:var(--red);border:1px solid rgba(255,68,68,0.25);}
+.delivery-chip.skip{background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid rgba(255,255,255,0.1);}
+
+
+/* ── SPIKE WARNING BANNER ── */
+.spike-banner{display:none;margin:0 0 20px 0;border-radius:var(--radius);padding:16px 22px;border:1px solid;animation:bannerPulse 3s ease-in-out infinite;}
+.spike-banner.critical{background:rgba(255,68,68,0.08);border-color:rgba(255,68,68,0.4);}
+.spike-banner.warning{background:rgba(255,170,0,0.08);border-color:rgba(255,170,0,0.4);}
+.spike-banner.elevated{background:rgba(0,204,255,0.07);border-color:rgba(0,204,255,0.35);}
+@keyframes bannerPulse{0%,100%{opacity:1}50%{opacity:0.75}}
+.spike-banner-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.spike-banner-left{display:flex;align-items:center;gap:14px;}
+.spike-banner-icon{font-size:1.4rem;flex-shrink:0;}
+.spike-banner-title{font-size:14px;font-weight:600;margin-bottom:3px;}
+.spike-banner.critical .spike-banner-title{color:var(--red);}
+.spike-banner.warning .spike-banner-title{color:var(--amber);}
+.spike-banner.elevated .spike-banner-title{color:var(--cyan);}
+.spike-banner-detail{font-size:12px;color:var(--text2);font-family:var(--mono);line-height:1.5;}
+.spike-banner-btn{font-size:12px;font-weight:600;letter-spacing:0.5px;padding:8px 18px;border-radius:20px;border:1px solid;background:transparent;cursor:pointer;transition:all 0.2s;white-space:nowrap;flex-shrink:0;}
+.spike-banner.critical .spike-banner-btn{color:var(--red);border-color:rgba(255,68,68,0.5);}
+.spike-banner.warning .spike-banner-btn{color:var(--amber);border-color:rgba(255,170,0,0.5);}
+.spike-banner.elevated .spike-banner-btn{color:var(--cyan);border-color:rgba(0,204,255,0.5);}
+.spike-banner-btn:hover{background:rgba(255,255,255,0.06);}
+/* ── TAB BADGE ── */
+.tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;font-size:10px;font-weight:700;margin-left:6px;animation:pulse 2s ease-in-out infinite;vertical-align:middle;}
+.tab-badge.critical{background:var(--red);color:#fff;}
+.tab-badge.warning{background:var(--amber);color:#000;}
+.tab-badge.elevated{background:var(--cyan);color:#000;}
+/* ── SAVINGS PANEL ── */
+.savings-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px 26px;box-shadow:var(--shadow-card);margin-bottom:18px;grid-column:span 12;}
+.savings-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px;}
+.savings-title{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;display:flex;align-items:center;gap:10px;}
+.savings-title i{color:var(--green);font-size:14px;}
+.savings-live-badge{font-family:var(--mono);font-size:10px;letter-spacing:0.5px;padding:4px 10px;border-radius:20px;background:var(--green-dim);color:var(--green);border:1px solid rgba(0,255,136,0.3);display:flex;align-items:center;gap:6px;}
+.savings-live-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite;}
+.savings-hero{display:flex;align-items:flex-end;gap:12px;margin-bottom:24px;}
+.savings-hero-amount{font-family:var(--mono);font-size:52px;font-weight:600;color:var(--green);line-height:1;letter-spacing:-2px;}
+.savings-hero-meta{padding-bottom:8px;}
+.savings-hero-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px;}
+.savings-hero-pct{font-family:var(--mono);font-size:18px;color:var(--green);font-weight:600;}
+.savings-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:rgba(255,255,255,0.05);border-radius:8px;overflow:hidden;margin-bottom:20px;}
+.savings-stat{background:rgba(255,255,255,0.03);padding:14px 16px;}
+.savings-stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;font-weight:500;}
+.savings-stat-value{font-family:var(--mono);font-size:18px;color:var(--text);font-weight:600;}
+.savings-stat-value.green{color:var(--green);}
+.savings-stat-value.cyan{color:var(--cyan);}
+.savings-regions{display:flex;flex-direction:column;gap:8px;}
+.savings-region-row{display:flex;align-items:center;gap:12px;}
+.savings-region-label{font-family:var(--mono);font-size:11px;color:var(--muted);width:52px;flex-shrink:0;}
+.savings-region-bar-wrap{flex:1;height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;}
+.savings-region-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--green),var(--cyan));transition:width 0.8s cubic-bezier(0.4,0,0.2,1);}
+.savings-region-value{font-family:var(--mono);font-size:11px;color:var(--green);width:64px;text-align:right;flex-shrink:0;}
+/* ── SPIKE RISK PANEL ── */
+.spike-risk-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px 26px;box-shadow:var(--shadow-card);margin-bottom:18px;grid-column:span 12;}
+.spike-risk-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px;}
+.spike-risk-cell{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 10px;text-align:center;transition:all 0.3s;}
+.spike-risk-cell.critical{background:rgba(255,68,68,0.08);border-color:rgba(255,68,68,0.35);}
+.spike-risk-cell.warning{background:rgba(255,170,0,0.08);border-color:rgba(255,170,0,0.35);}
+.spike-risk-cell.elevated{background:rgba(0,204,255,0.07);border-color:rgba(0,204,255,0.3);}
+.spike-risk-region{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;letter-spacing:0.5px;}
+.spike-risk-indicator{font-size:1.3rem;margin-bottom:6px;line-height:1;}
+.spike-risk-level{font-size:10px;text-transform:uppercase;letter-spacing:0.7px;font-weight:600;}
+.spike-risk-cell.critical .spike-risk-level{color:var(--red);}
+.spike-risk-cell.warning .spike-risk-level{color:var(--amber);}
+.spike-risk-cell.elevated .spike-risk-level{color:var(--cyan);}
+.spike-risk-cell.normal .spike-risk-level{color:var(--muted);}
+.spike-risk-ratio{font-family:var(--mono);font-size:11px;color:var(--text2);margin-top:4px;}
+/* ── SPIKE MODAL ── */
+.spike-modal-overlay{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);align-items:center;justify-content:center;}
+.spike-modal-overlay.open{display:flex;}
+.spike-modal{background:var(--bg2);border:1px solid rgba(255,170,0,0.3);border-radius:14px;padding:32px 36px;max-width:560px;width:90%;position:relative;box-shadow:0 32px 80px rgba(0,0,0,0.6);}
+.spike-modal-close{position:absolute;top:16px;right:18px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px;transition:color 0.2s;}
+.spike-modal-close:hover{color:var(--text);}
+.spike-modal-title{font-family:var(--mono);font-size:18px;font-weight:700;margin-bottom:6px;}
+.spike-modal-subtitle{font-size:13px;color:var(--text2);margin-bottom:24px;}
+.spike-modal-warnings{display:flex;flex-direction:column;gap:10px;}
+.spike-modal-item{background:rgba(255,255,255,0.04);border-radius:8px;padding:14px 16px;border-left:3px solid;}
+.spike-modal-item.critical{border-color:var(--red);}
+.spike-modal-item.warning{border-color:var(--amber);}
+.spike-modal-item.elevated{border-color:var(--cyan);}
+.spike-modal-region{font-family:var(--mono);font-size:12px;font-weight:700;margin-bottom:5px;}
+.spike-modal-item.critical .spike-modal-region{color:var(--red);}
+.spike-modal-item.warning .spike-modal-region{color:var(--amber);}
+.spike-modal-item.elevated .spike-modal-region{color:var(--cyan);}
+.spike-modal-msg{font-size:12px;color:var(--text2);line-height:1.6;}
+.spike-modal-action{margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.07);font-size:13px;color:var(--text2);line-height:1.7;}
+.spike-modal-action strong{color:var(--green);}
+
+
+/* ── GPU DEEP DIAGNOSTICS PANEL ── */
+.diag-panel{background:rgba(0,204,255,0.04);border:1px solid rgba(0,204,255,0.2);border-radius:14px;padding:20px;transition:all 0.25s;}
+.diag-section-title{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.diag-section-title i{color:var(--cyan);font-size:11px;}
+.diag-section{margin-bottom:18px;}
+.diag-section:last-child{margin-bottom:0;}
+/* Utilization gauges */
+.diag-gauges{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px;}
+.diag-gauge{text-align:center;}
+.diag-gauge-ring{position:relative;width:64px;height:64px;margin:0 auto 6px;}
+.diag-gauge-ring svg{transform:rotate(-90deg);}
+.diag-gauge-bg{fill:none;stroke:rgba(255,255,255,0.07);stroke-width:6;}
+.diag-gauge-fill{fill:none;stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1);}
+.diag-gauge-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;}
+.diag-gauge-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.7px;}
+/* Clock rows */
+.diag-clock-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.diag-clock-row:last-child{border-bottom:none;}
+.diag-clock-name{font-size:11px;color:var(--muted);font-family:var(--mono);width:36px;flex-shrink:0;}
+.diag-clock-bar-wrap{flex:1;height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;}
+.diag-clock-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--cyan),rgba(0,204,255,0.4));transition:width 0.7s ease;}
+.diag-clock-val{font-size:11px;font-family:var(--mono);color:var(--text2);width:68px;text-align:right;flex-shrink:0;}
+/* PCIe rows */
+.diag-pcie-row{display:flex;align-items:center;gap:8px;padding:5px 0;}
+.diag-pcie-label{font-size:11px;color:var(--muted);font-family:var(--mono);width:28px;flex-shrink:0;}
+.diag-pcie-bar-wrap{flex:1;height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;}
+.diag-pcie-bar{height:100%;border-radius:3px;transition:width 0.7s ease;}
+.diag-pcie-bar.tx{background:linear-gradient(90deg,var(--green),rgba(0,255,136,0.4));}
+.diag-pcie-bar.rx{background:linear-gradient(90deg,var(--amber),rgba(255,170,0,0.4));}
+.diag-pcie-val{font-size:11px;font-family:var(--mono);color:var(--text2);width:72px;text-align:right;flex-shrink:0;}
+/* Optimization impact */
+.diag-impact-row{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.diag-impact-row:last-child{border-bottom:none;}
+.diag-impact-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.diag-impact-dot.green{background:var(--green);box-shadow:0 0 5px var(--green);}
+.diag-impact-dot.amber{background:var(--amber);box-shadow:0 0 5px var(--amber);}
+.diag-impact-dot.red{background:var(--red);box-shadow:0 0 5px var(--red);}
+.diag-impact-dot.cyan{background:var(--cyan);}
+.diag-impact-label{font-size:11px;color:var(--muted);margin-bottom:2px;}
+.diag-impact-value{font-size:12px;font-family:var(--mono);color:var(--text2);}
+
+
+/* ── WEATHER TAB ── */
+.weather-site-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:18px;}
+.weather-site-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow-card);transition:all 0.3s;}
+.weather-site-card.critical{border-color:rgba(255,68,68,0.4);background:rgba(255,68,68,0.04);}
+.weather-site-card.warning{border-color:rgba(255,170,0,0.4);background:rgba(255,170,0,0.04);}
+.weather-site-card.elevated{border-color:rgba(0,204,255,0.35);background:rgba(0,204,255,0.03);}
+.weather-site-card.normal{border-color:rgba(0,255,136,0.2);}
+.wsc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+.wsc-name{font-size:13px;font-weight:700;color:var(--text);}
+.wsc-region{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
+.wsc-badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:3px 10px;border-radius:10px;}
+.wsc-badge.critical{background:rgba(255,68,68,0.15);color:var(--red);border:1px solid rgba(255,68,68,0.3);}
+.wsc-badge.warning{background:rgba(255,170,0,0.15);color:var(--amber);border:1px solid rgba(255,170,0,0.3);}
+.wsc-badge.elevated{background:rgba(0,204,255,0.1);color:var(--cyan);border:1px solid rgba(0,204,255,0.3);}
+.wsc-badge.normal{background:rgba(0,255,136,0.1);color:var(--green);border:1px solid rgba(0,255,136,0.25);}
+.wsc-alert-list{margin-bottom:12px;}
+.wsc-alert-item{font-size:12px;color:var(--text2);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);line-height:1.5;}
+.wsc-alert-item:last-child{border-bottom:none;}
+.wsc-alert-icon{margin-right:6px;}
+.wsc-no-alerts{font-size:12px;color:var(--muted);padding:6px 0;}
+/* Runway panel */
+.runway-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px 26px;box-shadow:var(--shadow-card);margin-bottom:18px;}
+.runway-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px;}
+.runway-card{background:rgba(255,255,255,0.03);border-radius:10px;padding:16px 18px;border:1px solid rgba(255,255,255,0.07);}
+.runway-card.ok{border-color:rgba(0,255,136,0.3);}
+.runway-card.warn{border-color:rgba(255,170,0,0.3);}
+.runway-card.crit{border-color:rgba(255,68,68,0.3);}
+.runway-site-name{font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px;}
+.runway-metric{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.runway-metric:last-child{border-bottom:none;}
+.runway-metric-label{color:var(--muted);}
+.runway-metric-value{font-family:var(--mono);color:var(--text2);}
+.runway-metric-value.ok{color:var(--green);}
+.runway-metric-value.warn{color:var(--amber);}
+.runway-metric-value.crit{color:var(--red);}
+.runway-rec{margin-top:10px;font-size:11px;color:var(--text2);line-height:1.6;padding:8px 10px;background:rgba(0,255,136,0.05);border-radius:6px;border-left:2px solid rgba(0,255,136,0.3);}
+/* Scale options table */
+.scale-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px;}
+.scale-table th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;padding:4px 8px;text-align:left;font-weight:600;}
+.scale-table td{padding:5px 8px;border-bottom:1px solid rgba(255,255,255,0.04);font-family:var(--mono);color:var(--text2);}
+.scale-table tr:last-child td{border-bottom:none;}
+.scale-table .covered{color:var(--green);}
+.scale-table .uncovered{color:var(--red);}
+/* Weather config panel */
+.weather-config-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px 26px;box-shadow:var(--shadow-card);margin-bottom:18px;}
+.weather-site-form{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px;}
+.weather-site-select{background:#1a1f35;border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:8px 12px;color:#e8edf5;font-size:13px;font-family:var(--font);outline:none;width:100%;}
+.weather-site-select option{background:#1a1f35;color:#e8edf5;}
+/* Grid correlation strip */
+.corr-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px;}
+.corr-cell{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px;text-align:center;}
+.corr-cell.critical{background:rgba(255,68,68,0.07);border-color:rgba(255,68,68,0.3);}
+.corr-cell.warning{background:rgba(255,170,0,0.07);border-color:rgba(255,170,0,0.3);}
+.corr-region{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px;}
+.corr-prob{font-family:var(--mono);font-size:16px;font-weight:700;margin-bottom:2px;}
+.corr-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+
 </style>
 </head>
 <body>
@@ -477,7 +699,7 @@
     <div class="logo">
       <div class="logo-mark">⚡</div>
       <div>
-        <div class="logo-text">ENERGIA</div>
+        <div class="logo-text">hexagrid</div>
         <div class="logo-sub">AI Data Center Energy Intelligence</div>
       </div>
     </div>
@@ -505,7 +727,7 @@
     <div style="display:flex;align-items:center;gap:12px">
       <div style="background:linear-gradient(135deg,#00ff88,#00ccff);border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#000;font-weight:800">⚡</div>
       <div>
-        <div style="font-size:17px;font-weight:700;background:linear-gradient(135deg,#00ff88,#00ccff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Energia Help</div>
+        <div style="font-size:17px;font-weight:700;background:linear-gradient(135deg,#00ff88,#00ccff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">HexaGrid™ Help</div>
         <div id="help-tab-label" style="font-size:12px;color:var(--muted);margin-top:2px">Select a tab for contextual help</div>
       </div>
     </div>
@@ -522,6 +744,8 @@
     <button class="help-tab-btn" onclick="showHelpTab('carbon',this)"><i class="fa-solid fa-leaf"></i> Carbon</button>
     <button class="help-tab-btn" onclick="showHelpTab('fleet',this)"><i class="fa-solid fa-network-wired"></i> Fleet</button>
     <button class="help-tab-btn" onclick="showHelpTab('hardware',this)"><i class="fa-solid fa-microchip"></i> Hardware</button>
+    <button class="help-tab-btn" onclick="showHelpTab('alerts',this)"><i class="fa-solid fa-bell"></i> Alerts</button>
+    <button class="help-tab-btn" onclick="showHelpTab('weather',this)"><i class="fa-solid fa-cloud-bolt"></i> Weather</button>
   </div>
 
   <div id="help-content" style="padding:28px 32px"></div>
@@ -538,12 +762,60 @@
     <button class="tab" onclick="switchTab('carbon', this)"><i class="fa-solid fa-leaf"></i>Carbon</button>
     <button class="tab" onclick="switchTab('fleet', this)"><i class="fa-solid fa-network-wired"></i>Fleet</button>
     <button class="tab" onclick="switchTab('hardware', this)"><i class="fa-solid fa-microchip"></i>Hardware</button>
+    <button class="tab" onclick="switchTab('alerts', this)"><i class="fa-solid fa-bell"></i>Alerts</button>
+    <button class="tab" onclick="switchTab('weather', this)"><i class="fa-solid fa-cloud-bolt"></i>Weather</button>
   </div>
 </div>
 
 <!-- ══ OVERVIEW ══ -->
 <div class="page active" id="page-overview">
 <div class="page-inner">
+<!-- SPIKE WARNING BANNER -->
+<div class="spike-banner" id="spikeBanner">
+  <div class="spike-banner-inner">
+    <div class="spike-banner-left">
+      <div class="spike-banner-icon" id="spikeBannerIcon">&#x26A1;</div>
+      <div>
+        <div class="spike-banner-title" id="spikeBannerTitle">Price Spike Warning</div>
+        <div class="spike-banner-detail" id="spikeBannerDetail">Analysing forecast data...</div>
+      </div>
+    </div>
+    <button class="spike-banner-btn" onclick="openSpikeModal()">View Details &rarr;</button>
+  </div>
+</div>
+
+<!-- SAVINGS PANEL -->
+<div class="savings-panel">
+  <div class="savings-header">
+    <div class="savings-title"><i class="fa-solid fa-piggy-bank"></i> Cost Savings Ledger</div>
+    <div class="savings-live-badge"><div class="dot"></div> Live &middot; All-Time Cumulative</div>
+  </div>
+  <div class="savings-hero">
+    <div class="savings-hero-amount" id="savingsHeroAmount">$&mdash;</div>
+    <div class="savings-hero-meta">
+      <div class="savings-hero-label">Total Saved vs Flat-Rate</div>
+      <div class="savings-hero-pct" id="savingsHeroPct">&mdash;%</div>
+    </div>
+  </div>
+  <div class="savings-stats">
+    <div class="savings-stat"><div class="savings-stat-label">Decisions</div><div class="savings-stat-value" id="savingsDecisions">&mdash;</div></div>
+    <div class="savings-stat"><div class="savings-stat-label">Naive Cost</div><div class="savings-stat-value" id="savingsNaive">$&mdash;</div></div>
+    <div class="savings-stat"><div class="savings-stat-label">Actual Cost</div><div class="savings-stat-value cyan" id="savingsActual">$&mdash;</div></div>
+    <div class="savings-stat"><div class="savings-stat-label">Avg Saving/Decision</div><div class="savings-stat-value green" id="savingsAvgPct">&mdash;%</div></div>
+  </div>
+  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;font-weight:600;">By Region</div>
+  <div class="savings-regions" id="savingsRegions"></div>
+</div>
+
+<!-- SPIKE RISK PANEL -->
+<div class="spike-risk-panel">
+  <div class="card-title">
+    <i class="fa-solid fa-triangle-exclamation"></i> Price Spike Risk &mdash; All Regions
+    <span style="margin-left:auto;font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:0" id="spikeCheckedAt"></span>
+  </div>
+  <div class="spike-risk-grid" id="spikeRiskGrid"></div>
+</div>
+
 <div class="grid">
 
   <!-- KPI: Grid Price -->
@@ -1266,6 +1538,202 @@
 <!-- end page-hardware -->
 
 
+<!-- ═══════════════════════════ WEATHER TAB ══════════════════════════ -->
+<div class="page" id="page-weather">
+<div class="page-inner">
+
+  <!-- KPI strip -->
+  <div class="grid" style="margin-bottom:18px;">
+    <div class="card col-3">
+      <div class="card-title"><i class="fa-solid fa-triangle-exclamation"></i>Active Alerts</div>
+      <div class="kpi-value" id="wxKpiAlerts" style="color:var(--amber)">—</div>
+      <div class="kpi-unit">across all sites</div>
+    </div>
+    <div class="card col-3">
+      <div class="card-title"><i class="fa-solid fa-shield-halved"></i>Sites at Risk</div>
+      <div class="kpi-value" id="wxKpiSitesAtRisk" style="color:var(--red)">—</div>
+      <div class="kpi-unit">critical or warning</div>
+    </div>
+    <div class="card col-3">
+      <div class="card-title"><i class="fa-solid fa-battery-half"></i>Backup Power</div>
+      <div class="kpi-value" id="wxKpiBackup" style="color:var(--green)">—</div>
+      <div class="kpi-unit" id="wxKpiBackupLabel">sites fully covered</div>
+    </div>
+    <div class="card col-3">
+      <div class="card-title"><i class="fa-solid fa-rotate"></i>Last Check</div>
+      <div class="kpi-value" id="wxKpiChecked" style="font-size:18px;margin-top:8px">—</div>
+      <div class="kpi-unit">
+        <button onclick="triggerWeatherCheck()" style="background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.25);color:var(--green);border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-weight:600;">↻ Check Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Site weather cards -->
+  <div class="card-title" style="margin-bottom:12px;">
+    <i class="fa-solid fa-location-dot" style="color:var(--amber)"></i> Site Weather Status
+  </div>
+  <div class="weather-site-grid" id="wxSiteGrid">
+    <div style="color:var(--muted);font-size:13px;grid-column:span 3;padding:16px 0;">Loading site weather data...</div>
+  </div>
+
+  <!-- Backup Power Runway -->
+  <div class="runway-panel">
+    <div class="card-title" style="margin-bottom:4px;">
+      <i class="fa-solid fa-plug-circle-bolt" style="color:var(--green)"></i> Backup Power Runway Analysis
+      <span style="margin-left:auto;font-size:12px;color:var(--muted);font-weight:400">Based on current power draw + configured UPS/generator capacity</span>
+    </div>
+    <div class="runway-grid" id="wxRunwayGrid">
+      <div style="color:var(--muted);font-size:13px;grid-column:span 3;padding:8px 0;">Loading runway data...</div>
+    </div>
+  </div>
+
+  <!-- Grid Price Correlation -->
+  <div class="card col-12" style="margin-bottom:18px;">
+    <div class="card-title" style="margin-bottom:4px;">
+      <i class="fa-solid fa-bolt" style="color:var(--amber)"></i> Grid Price Spike Correlation
+      <span style="margin-left:auto;font-size:12px;color:var(--muted);font-weight:400">Estimated probability of price spike caused by active weather events</span>
+    </div>
+    <div class="corr-strip" id="wxCorrStrip">
+      <div style="color:var(--muted);font-size:12px;grid-column:span 5;padding:8px 0;">No active events — all regions normal.</div>
+    </div>
+  </div>
+
+  <!-- Site Configuration -->
+  <div class="weather-config-panel">
+    <div class="card-title" style="margin-bottom:4px;">
+      <i class="fa-solid fa-sliders" style="color:var(--cyan)"></i> Site Backup Power Configuration
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Configure UPS and generator capacity per site for accurate runway calculations.</div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
+      <select id="wxConfigSite" class="weather-site-select" style="max-width:220px;" onchange="loadSiteConfig()">
+        <option value="">Select a site...</option>
+        <option value="dc_east">East Coast DC (PJM)</option>
+        <option value="dc_mid">Mid-Atlantic DC (PJM)</option>
+        <option value="dc_texas">Texas DC (ERCOT)</option>
+        <option value="dc_california">California DC (CAISO)</option>
+        <option value="dc_newengland">New England DC (ISONE)</option>
+      </select>
+    </div>
+    <div class="weather-site-form" id="wxConfigForm" style="display:none;">
+      <div>
+        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px;font-weight:600;">UPS Capacity (MWh)</label>
+        <input type="number" id="wxUps" step="0.5" min="0" placeholder="10.0"
+               style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:9px 14px;color:var(--text);font-size:13px;outline:none;">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px;font-weight:600;">Generator Capacity (kW)</label>
+        <input type="number" id="wxGen" step="100" min="0" placeholder="1500"
+               style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:9px 14px;color:var(--text);font-size:13px;outline:none;">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px;font-weight:600;">Normal Draw (kW)</label>
+        <input type="number" id="wxDraw" step="50" min="0" placeholder="500"
+               style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:9px 14px;color:var(--text);font-size:13px;outline:none;">
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:10px;grid-column:span 3;">
+        <button onclick="saveSiteConfig()" class="alerts-save-btn">Save Configuration</button>
+        <div class="alerts-status" id="wxSaveStatus"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+<!-- ═══════════════════════════ END WEATHER TAB ═══════════════════════ -->
+
+<!-- ═══════════════════════════ ALERTS TAB ═══════════════════════════ -->
+<div class="page" id="page-alerts">
+<div class="page-inner">
+
+  <!-- Summary KPIs -->
+  <div class="grid" style="margin-bottom:18px;">
+    <div class="card col-3">
+      <div class="card-title"><i class="fa-solid fa-bell"></i>Total Alerts</div>
+      <div class="kpi-value" id="alertKpiTotal">—</div>
+      <div class="kpi-unit">all time</div>
+    </div>
+    <div class="card col-3">
+      <div class="card-title"><i class="fa-solid fa-clock"></i>Last 24 Hours</div>
+      <div class="kpi-value cyan" id="alertKpi24h">—</div>
+      <div class="kpi-unit">alerts fired</div>
+    </div>
+    <div class="card col-3">
+      <div class="card-title"><i class="fa-solid fa-envelope"></i>Email</div>
+      <div class="kpi-value" id="alertKpiEmail" style="font-size:22px;margin-top:6px">—</div>
+      <div class="kpi-unit" id="alertKpiEmailStatus">checking...</div>
+    </div>
+    <div class="card col-3">
+      <div class="card-title"><i class="fa-solid fa-globe"></i>Webhook</div>
+      <div class="kpi-value" id="alertKpiWebhook" style="font-size:22px;margin-top:6px">—</div>
+      <div class="kpi-unit" id="alertKpiWebhookStatus">checking...</div>
+    </div>
+  </div>
+
+  <div class="alerts-config-grid">
+
+    <!-- Email Config -->
+    <div class="alerts-section">
+      <div class="card-title" style="margin-bottom:18px;"><i class="fa-solid fa-envelope" style="color:var(--green)"></i>Email Notifications</div>
+      <div class="alerts-toggle">
+        <input type="checkbox" id="emailEnabled" onchange="saveAlertConfig()">
+        <label for="emailEnabled">Enable email alerts</label>
+      </div>
+      <div class="alerts-field"><label>SMTP Host</label><input type="text" id="smtpHost" placeholder="smtp.gmail.com" oninput="markDirty()"></div>
+      <div class="alerts-field"><label>SMTP Port</label><input type="number" id="smtpPort" placeholder="587" oninput="markDirty()"></div>
+      <div class="alerts-field"><label>SMTP Username</label><input type="text" id="smtpUser" placeholder="you@gmail.com" oninput="markDirty()"></div>
+      <div class="alerts-field"><label>SMTP Password</label><input type="password" id="smtpPass" placeholder="app password" oninput="markDirty()"></div>
+      <div class="alerts-field"><label>From Address</label><input type="text" id="emailFrom" placeholder="hexagrid@yourdomain.com" oninput="markDirty()"></div>
+      <div class="alerts-field"><label>To Addresses (comma-separated)</label><input type="text" id="emailTo" placeholder="ops@company.com, alerts@company.com" oninput="markDirty()"></div>
+    </div>
+
+    <!-- Webhook Config -->
+    <div class="alerts-section">
+      <div class="card-title" style="margin-bottom:18px;"><i class="fa-solid fa-globe" style="color:var(--cyan)"></i>Webhook Notifications</div>
+      <div class="alerts-toggle">
+        <input type="checkbox" id="webhookEnabled" onchange="saveAlertConfig()">
+        <label for="webhookEnabled">Enable webhook alerts</label>
+      </div>
+      <div class="alerts-field"><label>Webhook URL</label><input type="text" id="webhookUrl" placeholder="https://hooks.slack.com/services/..." oninput="markDirty()"></div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:18px;">Compatible with Slack, Teams, PagerDuty, Discord, and any HTTP POST endpoint.</div>
+
+      <div class="card-title" style="margin-bottom:14px;margin-top:8px;"><i class="fa-solid fa-sliders" style="color:var(--amber)"></i>Thresholds</div>
+      <div class="alerts-field"><label>GPU Health Min Score (0–100)</label><input type="number" id="gpuHealthMin" placeholder="60" min="0" max="100" oninput="markDirty()"></div>
+      <div class="alerts-field"><label>GPU Temp Critical (°C)</label><input type="number" id="gpuTempCrit" placeholder="88" min="60" max="110" oninput="markDirty()"></div>
+      <div class="alerts-field"><label>Fleet Capacity Critical (%)</label><input type="number" id="fleetCapCrit" placeholder="90" min="50" max="100" oninput="markDirty()"></div>
+    </div>
+
+    <!-- Event Toggles -->
+    <div class="alerts-section">
+      <div class="card-title" style="margin-bottom:16px;"><i class="fa-solid fa-toggle-on" style="color:var(--green)"></i>Event Types</div>
+      <div class="alerts-toggle"><input type="checkbox" id="evtPriceSpike"><label for="evtPriceSpike">Price spike warning</label></div>
+      <div class="alerts-toggle"><input type="checkbox" id="evtGpuHealth"><label for="evtGpuHealth">GPU health score threshold</label></div>
+      <div class="alerts-toggle"><input type="checkbox" id="evtGpuAnomaly"><label for="evtGpuAnomaly">GPU anomaly detected</label></div>
+      <div class="alerts-toggle"><input type="checkbox" id="evtGpuTemp"><label for="evtGpuTemp">GPU temperature critical</label></div>
+      <div class="alerts-toggle"><input type="checkbox" id="evtFleetOffline"><label for="evtFleetOffline">Fleet site offline / capacity</label></div>
+      <div class="alerts-field" style="margin-top:16px;"><label>Dedup Window (minutes)</label><input type="number" id="dedupWindow" placeholder="30" min="1" max="1440" oninput="markDirty()"></div>
+      <div style="margin-top:8px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
+        <button class="alerts-save-btn" id="alertsSaveBtn" onclick="saveAlertConfig()">Save Configuration</button>
+        <button class="alerts-test-btn" onclick="sendTestAlert()">Send Test Alert</button>
+      </div>
+      <div class="alerts-status" id="alertsSaveStatus"></div>
+    </div>
+
+    <!-- Alert History -->
+    <div class="alerts-section">
+      <div class="card-title" style="margin-bottom:16px;">
+        <i class="fa-solid fa-history" style="color:var(--cyan)"></i>Recent Alerts
+        <span style="margin-left:auto"><button onclick="loadAlertHistory()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;">&#x21BB; Refresh</button></span>
+      </div>
+      <div id="alertHistoryLog" style="max-height:340px;overflow-y:auto;">
+        <div style="color:var(--muted);font-size:13px;">Loading...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+<!-- ═══════════════════════════ END ALERTS TAB ═══════════════════════ -->
+
 <script>
 // ═══════════════════════════════════════════════════════
 //  CONFIG
@@ -1319,6 +1787,8 @@ setInterval(() => {
 //  TAB SWITCHING
 // ═══════════════════════════════════════════════════════
 function switchTab(name, btn) {
+  if (name === 'alerts')  { setTimeout(initAlertsTab, 100); }
+  if (name === 'weather') { setTimeout(initWeatherTab, 100); }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
@@ -2242,22 +2712,22 @@ const HELP_CONTENT = {
     html: `
       <div class="help-section">
         <h3><i class="fa-solid fa-chart-bar"></i>What are Reports?</h3>
-        <p>Every time you run a simulation or scheduler job, Energia automatically generates a PNG chart and saves it to the <code style="font-family:var(--mono);font-size:12px;background:var(--surface2);padding:2px 6px;border-radius:4px">reports/</code> directory on the server. The Reports tab displays all of them as a gallery.</p>
+        <p>Every time you run a simulation or scheduler job, HexaGrid™ automatically generates a PNG chart and saves it to the <code style="font-family:var(--mono);font-size:12px;background:var(--surface2);padding:2px 6px;border-radius:4px">reports/</code> directory on the server. The Reports tab displays all of them as a gallery.</p>
       </div>
       <hr class="help-divider">
       <div class="help-section">
         <h3><i class="fa-solid fa-file-image"></i>Report Types</h3>
-        <div class="help-metric"><div class="hm-name">energia_twin_standard_*.png</div><div class="hm-desc">Digital Twin simulation in Standard TOU mode. Shows power draw over time, cost curve, and PUE profile for the simulated period.</div></div>
-        <div class="help-metric"><div class="hm-name">energia_twin_heron_*.png</div><div class="hm-desc">Digital Twin in HERON (quantum-enhanced) mode. Same charts but with QAOA-optimized workload placement applied — compare against standard to see the savings.</div></div>
-        <div class="help-metric"><div class="hm-name">energia_scheduler_*.png</div><div class="hm-desc">QAOA scheduler output — Gantt chart with job placements, cost comparison between QAOA and greedy, and quantum circuit metrics.</div></div>
-        <div class="help-metric"><div class="hm-name">energia_forecast_*.png</div><div class="hm-desc">LSTM demand forecast output — predicted GPU power demand over the next 30/60/120 minutes vs actual (when available).</div></div>
+        <div class="help-metric"><div class="hm-name">hexagrid_twin_standard_*.png</div><div class="hm-desc">Digital Twin simulation in Standard TOU mode. Shows power draw over time, cost curve, and PUE profile for the simulated period.</div></div>
+        <div class="help-metric"><div class="hm-name">hexagrid_twin_heron_*.png</div><div class="hm-desc">Digital Twin in HERON (quantum-enhanced) mode. Same charts but with QAOA-optimized workload placement applied — compare against standard to see the savings.</div></div>
+        <div class="help-metric"><div class="hm-name">hexagrid_scheduler_*.png</div><div class="hm-desc">QAOA scheduler output — Gantt chart with job placements, cost comparison between QAOA and greedy, and quantum circuit metrics.</div></div>
+        <div class="help-metric"><div class="hm-name">hexagrid_forecast_*.png</div><div class="hm-desc">LSTM demand forecast output — predicted GPU power demand over the next 30/60/120 minutes vs actual (when available).</div></div>
       </div>
       <hr class="help-divider">
       <div class="help-section">
         <h3><i class="fa-solid fa-circle-info"></i>How to Use</h3>
         <p>Click any thumbnail to open the full-resolution image in a new tab. Click <strong style="color:var(--cyan)">Open ↗</strong> to download or share the direct URL. Use <strong style="color:var(--cyan)">Refresh Reports</strong> after running a new simulation to see the latest files.</p>
         <p>Report filenames include a timestamp so older runs are never overwritten. The gallery shows all reports from the current server session.</p>
-        <div class="help-tip"><strong>Tip:</strong> Reports are saved to <code style="font-family:var(--mono);font-size:12px;background:var(--surface2);padding:2px 6px;border-radius:4px">~/energia/reports/</code> on disk — you can archive them or share them without the dashboard.</div>
+        <div class="help-tip"><strong>Tip:</strong> Reports are saved to <code style="font-family:var(--mono);font-size:12px;background:var(--surface2);padding:2px 6px;border-radius:4px">~/hexagrid/reports/</code> on disk — you can archive them or share them without the dashboard.</div>
       </div>`
   },
   rl: {
@@ -2265,7 +2735,7 @@ const HELP_CONTENT = {
     html: `
       <div class="help-section">
         <h3><i class="fa-solid fa-robot"></i>What is the RL Agent?</h3>
-        <p>A Proximal Policy Optimization (PPO) reinforcement learning agent trained on the Energia Digital Twin environment. It learns — through millions of simulated 5-minute decisions — to autonomously control three systems simultaneously to minimize energy cost while keeping jobs on schedule.</p>
+        <p>A Proximal Policy Optimization (PPO) reinforcement learning agent trained on the HexaGrid™ Digital Twin environment. It learns — through millions of simulated 5-minute decisions — to autonomously control three systems simultaneously to minimize energy cost while keeping jobs on schedule.</p>
         <p>Unlike the QAOA Scheduler (which optimizes a fixed queue), the RL agent operates <strong style="color:var(--green)">continuously in real time</strong>, making decisions every 5 minutes based on current grid prices, queue state, and system telemetry.</p>
       </div>
       <hr class="help-divider">
@@ -2338,7 +2808,7 @@ const HELP_CONTENT = {
     html: `
       <div class="help-section">
         <h3><i class="fa-solid fa-network-wired"></i>What is the Fleet tab?</h3>
-        <p>Phase 9 — Multi-site orchestration. Energia manages a virtual fleet of 5 data centers across different US grid regions. The fleet engine scores every site in real time on price, carbon, available capacity, and PUE, then routes workloads to the optimal site for your priority.</p>
+        <p>Phase 9 — Multi-site orchestration. HexaGrid™ manages a virtual fleet of 5 data centers across different US grid regions. The fleet engine scores every site in real time on price, carbon, available capacity, and PUE, then routes workloads to the optimal site for your priority.</p>
       </div>
       <hr class="help-divider">
       <div class="help-section">
@@ -2374,7 +2844,7 @@ const HELP_CONTENT = {
     html: `
       <div class="help-section">
         <h3><i class="fa-solid fa-microchip"></i>What is the Hardware tab?</h3>
-        <p>Phase 10 — Real-time GPU health monitoring via <strong style="color:var(--cyan)">NVML (pynvml)</strong>. Energia polls your GPUs every 10 seconds and runs anomaly detection on the telemetry stream, closing the loop between energy optimization and hardware protection.</p>
+        <p>Phase 10 — Real-time GPU health monitoring via <strong style="color:var(--cyan)">NVML (pynvml)</strong>. HexaGrid™ polls your GPUs every 10 seconds and runs anomaly detection on the telemetry stream, closing the loop between energy optimization and hardware protection.</p>
         <p>If pynvml is installed and GPUs are detected, data is live from your hardware. Otherwise the tab runs in <strong style="color:var(--muted)">Synthetic mode</strong> — two virtual GPUs simulating realistic RTX 4060 and A1000 readings.</p>
       </div>
       <hr class="help-divider">
@@ -2399,6 +2869,143 @@ const HELP_CONTENT = {
         <h3><i class="fa-solid fa-chart-line"></i>History Charts</h3>
         <p>Temperature and power draw history from 30 minutes to 24 hours. Dots on the temperature chart are colour-coded to threshold level. Use the selectors to switch GPU and time window.</p>
         <div class="help-tip"><strong>Tip:</strong> Install pynvml to get live data from your RTX 4060 and A1000:<br><code style="background:rgba(0,204,255,0.1);padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:12px">pip install pynvml --break-system-packages</code><br>Then restart uvicorn — the tab will switch from Synthetic to Live NVML automatically.</div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-chart-pie"></i>Deep Diagnostics Panel</h3>
+        <p>The <strong style="color:var(--cyan)">GPU Deep Diagnostics</strong> panel sits alongside each GPU card and surfaces the metrics that the GPU card summarises as small text — promoted into proper visuals with live thresholds and direct ties to HexaGrid's scheduling decisions.</p>
+      </div>
+      <div class="help-section">
+        <h3><i class="fa-solid fa-circle-half-stroke"></i>Utilization Breakdown</h3>
+        <p>Three arc gauges showing what fraction of each resource is in use right now.</p>
+        <div class="help-metric"><div class="hm-name">Core %</div><div class="hm-desc">GPU shader/compute core utilization. High values mean the GPU is busy processing. Low values during queued jobs indicate deferral opportunity.</div></div>
+        <div class="help-metric"><div class="hm-name">Mem Controller %</div><div class="hm-desc">Memory controller utilization — how busy the VRAM bus is. Can be high even when Core % is low during data transfer operations.</div></div>
+        <div class="help-metric"><div class="hm-name">Power %</div><div class="hm-desc">Power draw as a percentage of TDP. Green below 75%, amber at 90%+, red at 100%+. Sustained 100%+ risks thermal throttling.</div></div>
+      </div>
+      <div class="help-section">
+        <h3><i class="fa-solid fa-clock"></i>Clock Speeds</h3>
+        <p>Horizontal bars showing current clock frequencies scaled against the GPU's maximum rated speeds.</p>
+        <div class="help-metric"><div class="hm-name">GFX</div><div class="hm-desc">Graphics core clock in MHz. Drops below boost clock when thermal or power limits are hit — a sign of throttling.</div></div>
+        <div class="help-metric"><div class="hm-name">MEM</div><div class="hm-desc">Memory clock in MHz. Should remain stable at rated speed under normal operation.</div></div>
+        <div class="help-metric"><div class="hm-name">SM</div><div class="hm-desc">Streaming Multiprocessor clock — the actual compute clock. Falls back to GFX clock if not separately reported by the driver.</div></div>
+        <div class="help-tip"><strong>Tip:</strong> If GFX clock is consistently well below boost clock while the GPU is under load, check temperatures and power draw — the GPU is likely thermally or power-throttling.</div>
+      </div>
+      <div class="help-section">
+        <h3><i class="fa-solid fa-arrow-right-arrow-left"></i>PCIe Throughput</h3>
+        <p>Live host-to-device (TX) and device-to-host (RX) bandwidth in MB/s, scaled against PCIe Gen4 x16 theoretical maximum.</p>
+        <div class="help-metric"><div class="hm-name">TX (green)</div><div class="hm-desc">Data being sent from CPU/system to the GPU. High during model loading, dataset transfers, and inference input batching.</div></div>
+        <div class="help-metric"><div class="hm-name">RX (amber)</div><div class="hm-desc">Data being read back from GPU to system. High during result retrieval and checkpoint saving.</div></div>
+        <div class="help-tip"><strong>Tip:</strong> Very low TX and RX during a compute job usually means the workload is GPU-bound — all data is already in VRAM. High PCIe during training suggests a data pipeline bottleneck.</div>
+      </div>
+      <div class="help-section">
+        <h3><i class="fa-solid fa-brain"></i>Optimization Impact</h3>
+        <p>This section shows exactly how the current GPU state is influencing HexaGrid's scheduling decisions — closing the loop between hardware telemetry and energy optimization.</p>
+        <div class="help-metric"><div class="hm-name">Scheduler Weight</div><div class="hm-desc">Full (100%) when the GPU is healthy. Reduced by 10% if thermal or memory headroom is constrained. Reduced by 30% if health score is degraded or an anomaly is active — the fleet router will prefer other sites.</div></div>
+        <div class="help-metric"><div class="hm-name">Deferral Eligibility</div><div class="hm-desc">Whether the RL agent can defer incoming jobs to a cheaper price window. Fully eligible below 40% core utilization, partial between 40–80%, ineligible above 80%.</div></div>
+        <div class="help-metric"><div class="hm-name">Anomaly Status</div><div class="hm-desc">Clean when IsolationForest sees no unusual combined-metric signature. If flagged, the scheduler is notified and scheduler weight is penalized immediately.</div></div>
+        <div class="help-metric"><div class="hm-name">ECC Memory</div><div class="hm-desc">Single-bit errors are automatically corrected by hardware but indicate aging VRAM. Double-bit errors are uncorrectable and represent a critical hardware fault requiring immediate investigation.</div></div>
+      </div>
+      `
+  }
+  ,alerts: {
+    label: 'Alerts Tab',
+    html: `
+      <div class="help-section">
+        <h3><i class="fa-solid fa-bell"></i>What is the Alerts tab?</h3>
+        <p>The Alerts tab configures HexaGrid's notification system. When platform conditions breach configured thresholds — a price spike, a GPU health drop, an anomaly, or a fleet site going offline — HexaGrid fires alerts via email and/or webhook automatically.</p>
+        <p>All alerts are deduplicated within a configurable time window so you receive meaningful signals, not repeated noise.</p>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-envelope"></i>Email Setup</h3>
+        <p>Enter your SMTP credentials. Gmail users should generate an <strong style="color:var(--cyan)">App Password</strong> (not your main password) — go to Google Account → Security → 2-Step Verification → App Passwords. Any SMTP provider works: SendGrid, Postmark, Mailgun, or your own server.</p>
+        <div class="help-metric"><div class="hm-name">SMTP Host</div><div class="hm-desc">smtp.gmail.com for Gmail. smtp.sendgrid.net for SendGrid.</div></div>
+        <div class="help-metric"><div class="hm-name">Port 587</div><div class="hm-desc">Standard STARTTLS port. Use 465 for SSL/TLS if your provider requires it.</div></div>
+        <div class="help-metric"><div class="hm-name">To Addresses</div><div class="hm-desc">Comma-separated list of recipients. Supports multiple addresses.</div></div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-globe"></i>Webhook Setup</h3>
+        <p>Enter any HTTP POST endpoint. The payload is JSON with Slack-compatible attachment formatting — works out of the box with Slack, Microsoft Teams, PagerDuty, Discord, and custom endpoints.</p>
+        <div class="help-metric"><div class="hm-name">Slack</div><div class="hm-desc">Create an Incoming Webhook in your Slack app settings. Paste the https://hooks.slack.com/... URL here.</div></div>
+        <div class="help-metric"><div class="hm-name">Teams</div><div class="hm-desc">Use a Teams Incoming Webhook connector. Paste the webhook URL.</div></div>
+        <div class="help-metric"><div class="hm-name">PagerDuty</div><div class="hm-desc">Use the Events API v2 endpoint with your integration key in the payload metadata.</div></div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-sliders"></i>Thresholds &amp; Events</h3>
+        <div class="help-metric"><div class="hm-name">Price Spike</div><div class="hm-desc">Fires when the LSTM forecast predicts a 1.5× or 2× price increase within 120 minutes. Critical fires at 2× within 60 minutes.</div></div>
+        <div class="help-metric"><div class="hm-name">GPU Health Score</div><div class="hm-desc">Fires when any GPU's 0–100 health score drops below your configured threshold. Default: 60.</div></div>
+        <div class="help-metric"><div class="hm-name">GPU Anomaly</div><div class="hm-desc">Fires when IsolationForest detects an unusual combined-metric signature on any GPU — catches patterns single thresholds miss.</div></div>
+        <div class="help-metric"><div class="hm-name">GPU Temperature</div><div class="hm-desc">Fires at 88°C or your configured critical threshold. Sustained high temperature risks throttling and hardware damage.</div></div>
+        <div class="help-metric"><div class="hm-name">Fleet Offline</div><div class="hm-desc">Fires when a fleet site goes offline, or when site capacity exceeds the configured critical percentage.</div></div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-flask"></i>Testing</h3>
+        <p>Use the <strong style="color:var(--green)">Send Test Alert</strong> button to verify your configuration before relying on it for real events. A test alert is delivered immediately and appears in the history log with a ✅ marker. If delivery fails, the error is shown in the log.</p>
+        <div class="help-tip"><strong>Tip:</strong> Set the dedup window to 1 minute while testing so repeated test alerts are not filtered out. Set it back to 30 minutes when done.</div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-piggy-bank"></i>Cost Savings Ledger</h3>
+        <p>The <strong style="color:var(--green)">Cost Savings Ledger</strong> on the Overview tab tracks every dispatch decision made by the RL Agent or QAOA Scheduler, comparing what each job actually cost versus what it would have cost at the moment it was queued. The difference is your real, compounding, all-time savings.</p>
+        <div class="help-metric"><div class="hm-name">Naive Cost</div><div class="hm-desc">What the job would have cost if dispatched immediately at the queue price.</div></div>
+        <div class="help-metric"><div class="hm-name">Actual Cost</div><div class="hm-desc">What the job actually cost after optimized deferral to a lower price window.</div></div>
+        <div class="help-metric"><div class="hm-name">By Region</div><div class="hm-desc">Savings broken down per ISO region — shows which grids offer the most optimization opportunity.</div></div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-triangle-exclamation"></i>Price Spike Early Warning</h3>
+        <p>The <strong style="color:var(--amber)">Price Spike Risk panel</strong> on the Overview tab shows the current forecast risk level for all five ISO regions simultaneously. When a spike is predicted, a banner appears at the top of the Overview and a badge appears on the tab.</p>
+        <div class="help-metric"><div class="hm-name">🟢 Normal</div><div class="hm-desc">No significant price movement predicted in the 120-minute window.</div></div>
+        <div class="help-metric"><div class="hm-name">🔵 Elevated</div><div class="hm-desc">Forecast shows 1.25× or more above current price. Monitor closely.</div></div>
+        <div class="help-metric"><div class="hm-name">🟡 Warning</div><div class="hm-desc">Forecast shows 1.5× or more. Consider deferring flexible workloads.</div></div>
+        <div class="help-metric"><div class="hm-name">🔴 Critical</div><div class="hm-desc">Forecast shows 2× or more within 60 minutes. Defer all non-urgent jobs immediately.</div></div>
+        <div class="help-tip"><strong>Tip:</strong> Enable the Alerts tab email or webhook so critical spikes notify you even when the dashboard is not open.</div>
+      </div>`
+  }
+
+  ,weather: {
+    label: 'Weather Tab',
+    html: `
+      <div class="help-section">
+        <h3><i class="fa-solid fa-cloud-bolt"></i>What is the Weather tab?</h3>
+        <p>The Weather tab monitors severe weather and seismic events at each of your data center sites and connects them directly to two operational questions: <strong style="color:var(--amber)">How will this affect the grid price?</strong> and <strong style="color:var(--green)">How long can we operate on backup power?</strong></p>
+        <p>Data comes from two free, real-time sources: NOAA National Weather Service for weather alerts, and the USGS Earthquake Hazards API for seismic events. No API keys required.</p>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-location-dot"></i>Site Weather Status</h3>
+        <p>Each card represents one of your fleet data center sites. The badge shows the current threat level based on active NOAA alerts and nearby seismic events.</p>
+        <div class="help-metric"><div class="hm-name">Normal</div><div class="hm-desc">No active severe weather alerts for this site's coordinates.</div></div>
+        <div class="help-metric"><div class="hm-name">Elevated</div><div class="hm-desc">Minor alert active — monitor but no immediate action required.</div></div>
+        <div class="help-metric"><div class="hm-name">Warning</div><div class="hm-desc">Moderate event active. Review backup power runway and consider deferring non-critical workloads.</div></div>
+        <div class="help-metric"><div class="hm-name">Critical</div><div class="hm-desc">Extreme or severe event. Activate backup power plan immediately and defer all non-critical jobs via the RL Agent tab.</div></div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-plug-circle-bolt"></i>Backup Power Runway</h3>
+        <p>Calculates how long each site can sustain operations on backup power, using configured UPS and generator specs against the worst-case active event duration.</p>
+        <div class="help-metric"><div class="hm-name">Generator check</div><div class="hm-desc">A checkmark means the generator output matches or exceeds normal draw — the site sustains indefinitely. A warning means the generator is undersized and the UPS provides the primary runway window.</div></div>
+        <div class="help-metric"><div class="hm-name">Full Capacity Runway</div><div class="hm-desc">Hours at 100% capacity on backup. Green checkmark means you outlast the event. Red cross shows a capacity scale-down table with 90/75/60/50% options.</div></div>
+        <div class="help-tip"><strong>Tip:</strong> Deferring non-critical GPU jobs reduces draw by approximately 20%, directly extending runway. The recommendation line shows the exact hours gained. Trigger deferral via the RL Agent tab.</div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-bolt"></i>Grid Price Spike Correlation</h3>
+        <p>Active weather events correlate with grid price spikes — a tornado in Texas means ERCOT is about to have a bad hour. This strip shows estimated spike probability per ISO region driven by active weather events.</p>
+        <div class="help-metric"><div class="hm-name">Spike Probability %</div><div class="hm-desc">Likelihood that the active weather event causes a significant price spike in this region, based on historical event-price correlations.</div></div>
+        <div class="help-metric"><div class="hm-name">Estimated Spike +%</div><div class="hm-desc">Expected price magnitude above current levels if the correlation materialises.</div></div>
+        <div class="help-tip"><strong>Tip:</strong> When both the Weather tab shows a critical event AND the Overview Spike Warning shows elevated risk for the same ISO region, treat it as high-confidence. Reroute workloads to unaffected regions via the Fleet tab immediately.</div>
+      </div>
+      <hr class="help-divider">
+      <div class="help-section">
+        <h3><i class="fa-solid fa-sliders"></i>Site Configuration</h3>
+        <p>Enter real UPS and generator specs per site for accurate runway calculations. Default values are representative estimates — replace with your actual hardware specifications.</p>
+        <div class="help-metric"><div class="hm-name">UPS Capacity (MWh)</div><div class="hm-desc">Total stored energy in your UPS system. Enterprise data centers typically range from 2 to 20 MWh depending on size and criticality.</div></div>
+        <div class="help-metric"><div class="hm-name">Generator Capacity (kW)</div><div class="hm-desc">Continuous rated output of your backup generators. Should match or exceed normal draw for full indefinite coverage.</div></div>
+        <div class="help-metric"><div class="hm-name">Normal Draw (kW)</div><div class="hm-desc">Average site power consumption under typical GPU workloads. Check your PDU or facility power monitoring systems for this value.</div></div>
       </div>`
   }
 
@@ -2528,7 +3135,7 @@ async function loadCarbonSnapshot() {
   } catch(e) {
     document.getElementById('carbon-zone-cards').innerHTML =
       `<div style="color:var(--red);font-size:14px;grid-column:span 5">
-        Failed to load carbon data. Check that the Electricity Maps API key is set in ~/energia/.env and uvicorn has been restarted.
+        Failed to load carbon data. Check that the Electricity Maps API key is set in ~/hexagrid/.env and uvicorn has been restarted.
        </div>`;
     console.warn('Carbon snapshot:', e);
   }
@@ -3222,6 +3829,160 @@ function populateGPUSelector(gpus) {
   ).join('');
 }
 
+
+// ── GPU Deep Diagnostics Panel ────────────────────────────────────────────────
+function renderDiagPanel(g) {
+  // ── Utilization gauges helper ─────────────────────────────────────────────
+  const CIRC = 2 * Math.PI * 27; // circumference for r=27
+  function gauge(pct, color) {
+    const capped  = Math.min(100, Math.max(0, pct));
+    const offset  = CIRC - (capped / 100) * CIRC;
+    return `<div class="diag-gauge-ring">
+      <svg width="64" height="64" viewBox="0 0 64 64">
+        <circle class="diag-gauge-bg" cx="32" cy="32" r="27"/>
+        <circle class="diag-gauge-fill" cx="32" cy="32" r="27"
+          stroke="${color}"
+          stroke-dasharray="${CIRC.toFixed(1)}"
+          stroke-dashoffset="${offset.toFixed(1)}"/>
+      </svg>
+      <div class="diag-gauge-val" style="color:${color}">${capped.toFixed(0)}%</div>
+    </div>`;
+  }
+
+  // ── Clocks (max values for RTX A1000 / RTX 4060) ─────────────────────────
+  const maxGfx = 2000, maxMem = 8000, maxSm = 2000;
+  const smClock = g.clock_sm || g.clock_graphics; // fallback to gfx if SM not present
+
+  // ── PCIe max scale ────────────────────────────────────────────────────────
+  const maxPcie = 16000; // PCIe Gen4 x16 ~16 GB/s theoretical
+  const txPct   = Math.min(100, (g.pcie_tx_mbps / maxPcie) * 100);
+  const rxPct   = Math.min(100, ((g.pcie_rx_mbps || 0) / maxPcie) * 100);
+
+  // ── Optimization impact logic ─────────────────────────────────────────────
+  const healthOk    = g.health_score >= 65;
+  const anomalyFlag = g.anomaly;
+  const memHigh     = g.mem_pct >= 85;
+  const tempHigh    = g.temp_c >= 78;
+
+  let schedWeight, schedColor, schedLabel;
+  if (!healthOk || anomalyFlag) {
+    schedWeight = 'Reduced (-30%)'; schedColor = 'red';
+    schedLabel  = 'Health/anomaly penalty applied';
+  } else if (memHigh || tempHigh) {
+    schedWeight = 'Adjusted (-10%)'; schedColor = 'amber';
+    schedLabel  = 'Thermal/memory headroom constraint';
+  } else {
+    schedWeight = 'Full Weight (100%)'; schedColor = 'green';
+    schedLabel  = 'No constraints active';
+  }
+
+  const deferEligible = g.gpu_util_pct < 40
+    ? 'Yes — utilization low, jobs deferrable'
+    : g.gpu_util_pct < 80
+    ? 'Partial — moderate load, light jobs deferrable'
+    : 'No — GPU fully loaded, dispatch only';
+  const deferDot = g.gpu_util_pct < 40 ? 'green' : g.gpu_util_pct < 80 ? 'amber' : 'red';
+
+  const anomalyStatus = anomalyFlag
+    ? 'Anomaly detected — scheduler notified'
+    : 'Clean — no anomaly flags';
+  const anomalyDot = anomalyFlag ? 'red' : 'green';
+
+  const eccStatus = (g.ecc_double > 0)
+    ? `Double-bit ECC errors: ${g.ecc_double} — critical`
+    : (g.ecc_single > 0)
+    ? `Single-bit ECC errors: ${g.ecc_single} — corrected`
+    : 'No ECC errors';
+  const eccDot = g.ecc_double > 0 ? 'red' : g.ecc_single > 0 ? 'amber' : 'green';
+
+  return `
+    <div class="diag-panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--text)">GPU ${g.gpu_idx} — Deep Diagnostics</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:3px">${g.gpu_name.replace('NVIDIA ','')}</div>
+        </div>
+        <span style="font-size:10px;font-family:var(--mono);color:var(--cyan);background:rgba(0,204,255,0.08);border:1px solid rgba(0,204,255,0.2);padding:3px 10px;border-radius:10px">LIVE</span>
+      </div>
+
+      <!-- Utilization Gauges -->
+      <div class="diag-section">
+        <div class="diag-section-title"><i class="fa-solid fa-chart-pie"></i>Utilization Breakdown</div>
+        <div class="diag-gauges">
+          <div class="diag-gauge">
+            ${gauge(g.gpu_util_pct, '#00ccff')}
+            <div class="diag-gauge-label">Core</div>
+          </div>
+          <div class="diag-gauge">
+            ${gauge(g.mem_util_pct !== undefined ? g.mem_util_pct : g.mem_pct, '#bf7fff')}
+            <div class="diag-gauge-label">Mem Ctrl</div>
+          </div>
+          <div class="diag-gauge">
+            ${gauge(g.power_pct, g.power_pct >= 90 ? '#ff4444' : g.power_pct >= 75 ? '#ffaa00' : '#00ff88')}
+            <div class="diag-gauge-label">Power</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clock Speeds -->
+      <div class="diag-section">
+        <div class="diag-section-title"><i class="fa-solid fa-clock"></i>Clock Speeds</div>
+        <div class="diag-clock-row">
+          <div class="diag-clock-name">GFX</div>
+          <div class="diag-clock-bar-wrap"><div class="diag-clock-bar" style="width:${Math.min(100,(g.clock_graphics/maxGfx)*100).toFixed(1)}%"></div></div>
+          <div class="diag-clock-val">${g.clock_graphics} MHz</div>
+        </div>
+        <div class="diag-clock-row">
+          <div class="diag-clock-name">MEM</div>
+          <div class="diag-clock-bar-wrap"><div class="diag-clock-bar" style="width:${Math.min(100,(g.clock_memory/maxMem)*100).toFixed(1)}%"></div></div>
+          <div class="diag-clock-val">${g.clock_memory} MHz</div>
+        </div>
+        <div class="diag-clock-row">
+          <div class="diag-clock-name">SM</div>
+          <div class="diag-clock-bar-wrap"><div class="diag-clock-bar" style="width:${Math.min(100,(smClock/maxSm)*100).toFixed(1)}%"></div></div>
+          <div class="diag-clock-val">${smClock} MHz</div>
+        </div>
+      </div>
+
+      <!-- PCIe Throughput -->
+      <div class="diag-section">
+        <div class="diag-section-title"><i class="fa-solid fa-arrow-right-arrow-left"></i>PCIe Throughput</div>
+        <div class="diag-pcie-row">
+          <div class="diag-pcie-label">TX</div>
+          <div class="diag-pcie-bar-wrap"><div class="diag-pcie-bar tx" style="width:${txPct.toFixed(1)}%"></div></div>
+          <div class="diag-pcie-val">${g.pcie_tx_mbps.toFixed(0)} MB/s</div>
+        </div>
+        <div class="diag-pcie-row">
+          <div class="diag-pcie-label">RX</div>
+          <div class="diag-pcie-bar-wrap"><div class="diag-pcie-bar rx" style="width:${rxPct.toFixed(1)}%"></div></div>
+          <div class="diag-pcie-val">${(g.pcie_rx_mbps || 0).toFixed(0)} MB/s</div>
+        </div>
+      </div>
+
+      <!-- Optimization Impact -->
+      <div class="diag-section">
+        <div class="diag-section-title"><i class="fa-solid fa-brain"></i>Optimization Impact</div>
+        <div class="diag-impact-row">
+          <div class="diag-impact-dot ${schedColor}"></div>
+          <div><div class="diag-impact-label">Scheduler Weight</div><div class="diag-impact-value">${schedWeight}</div><div style="font-size:10px;color:var(--muted);margin-top:1px">${schedLabel}</div></div>
+        </div>
+        <div class="diag-impact-row">
+          <div class="diag-impact-dot ${deferDot}"></div>
+          <div><div class="diag-impact-label">Deferral Eligibility</div><div class="diag-impact-value">${deferEligible}</div></div>
+        </div>
+        <div class="diag-impact-row">
+          <div class="diag-impact-dot ${anomalyDot}"></div>
+          <div><div class="diag-impact-label">Anomaly Status</div><div class="diag-impact-value">${anomalyStatus}</div></div>
+        </div>
+        <div class="diag-impact-row">
+          <div class="diag-impact-dot ${eccDot}"></div>
+          <div><div class="diag-impact-label">ECC Memory</div><div class="diag-impact-value">${eccStatus}</div></div>
+        </div>
+      </div>
+    </div>`;
+}
+// ── END GPU Deep Diagnostics ──────────────────────────────────────────────────
+
 function renderGPUCards(gpus) {
   const cols = gpus.length <= 2 ? 'repeat(2,1fr)' : 'repeat(3,1fr)';
   document.getElementById('hw-gpu-cards').style.gridTemplateColumns = cols;
@@ -3332,6 +4093,22 @@ function renderGPUCards(gpus) {
         ${eccRow}
       </div>`;
   }).join('');
+
+  // Append deep diagnostics panel beside each GPU card
+  // If only 1 GPU, add diag panel in the empty second slot
+  if (gpus.length === 1) {
+    document.getElementById('hw-gpu-cards').innerHTML +=
+      renderDiagPanel(gpus[0]);
+  } else {
+    // For multiple GPUs, insert diag panel after all GPU cards as a full-width panel
+    const diagWrap = document.createElement('div');
+    diagWrap.style.gridColumn = 'span ' + gpus.length;
+    diagWrap.style.display = 'grid';
+    diagWrap.style.gridTemplateColumns = 'repeat(' + gpus.length + ', 1fr)';
+    diagWrap.style.gap = '16px';
+    diagWrap.innerHTML = gpus.map(g => renderDiagPanel(g)).join('');
+    document.getElementById('hw-gpu-cards').appendChild(diagWrap);
+  }
 }
 
 // ── Telemetry history charts ──────────────────────────────────────────────────
@@ -3498,7 +4275,564 @@ function stopHWAutoRefresh() {
 
 
 
+
+// ═══════════════════════════════════════════════════════
+//  ALERTS TAB
+// ═══════════════════════════════════════════════════════
+let _alertsDirty = false;
+
+function markDirty() {
+  _alertsDirty = true;
+  const btn = document.getElementById('alertsSaveBtn');
+  if (btn) btn.textContent = 'Save Configuration *';
+}
+
+async function loadAlertConfig() {
+  try {
+    const d = await apiFetch('/alerts/config');
+    const c = d.config;
+    if (!c) return;
+    // Email
+    document.getElementById('emailEnabled').checked = c.email.enabled;
+    document.getElementById('smtpHost').value  = c.email.smtp_host || '';
+    document.getElementById('smtpPort').value  = c.email.smtp_port || 587;
+    document.getElementById('smtpUser').value  = c.email.smtp_user || '';
+    document.getElementById('smtpPass').value  = c.email.smtp_password || '';
+    document.getElementById('emailFrom').value = c.email.from_address || '';
+    document.getElementById('emailTo').value   = (c.email.to_addresses || []).join(', ');
+    // Webhook
+    document.getElementById('webhookEnabled').checked = c.webhook.enabled;
+    document.getElementById('webhookUrl').value = c.webhook.url || '';
+    // Thresholds
+    document.getElementById('gpuHealthMin').value = c.thresholds.gpu_health_min_score || 60;
+    document.getElementById('gpuTempCrit').value  = c.thresholds.gpu_temp_critical_c  || 88;
+    document.getElementById('fleetCapCrit').value = c.thresholds.fleet_capacity_critical_pct || 90;
+    // Events
+    document.getElementById('evtPriceSpike').checked  = c.events.price_spike;
+    document.getElementById('evtGpuHealth').checked   = c.events.gpu_health;
+    document.getElementById('evtGpuAnomaly').checked  = c.events.gpu_anomaly;
+    document.getElementById('evtGpuTemp').checked     = c.events.gpu_temperature;
+    document.getElementById('evtFleetOffline').checked= c.events.fleet_offline;
+    document.getElementById('dedupWindow').value      = c.dedup_window_minutes || 30;
+    // KPI status chips
+    document.getElementById('alertKpiEmail').textContent    = c.email.enabled ? '✅' : '⬜';
+    document.getElementById('alertKpiEmailStatus').textContent   = c.email.enabled ? 'configured' : 'disabled';
+    document.getElementById('alertKpiWebhook').textContent  = c.webhook.enabled ? '✅' : '⬜';
+    document.getElementById('alertKpiWebhookStatus').textContent = c.webhook.enabled ? 'configured' : 'disabled';
+    _alertsDirty = false;
+  } catch(e) { console.warn('Alert config load:', e); }
+}
+
+async function saveAlertConfig() {
+  const toList = (document.getElementById('emailTo').value || '')
+    .split(',').map(s => s.trim()).filter(Boolean);
+  const payload = {
+    dedup_window_minutes: parseInt(document.getElementById('dedupWindow').value) || 30,
+    email: {
+      enabled:       document.getElementById('emailEnabled').checked,
+      smtp_host:     document.getElementById('smtpHost').value.trim(),
+      smtp_port:     parseInt(document.getElementById('smtpPort').value) || 587,
+      smtp_user:     document.getElementById('smtpUser').value.trim(),
+      smtp_password: document.getElementById('smtpPass').value,
+      from_address:  document.getElementById('emailFrom').value.trim(),
+      to_addresses:  toList,
+    },
+    webhook: {
+      enabled: document.getElementById('webhookEnabled').checked,
+      url:     document.getElementById('webhookUrl').value.trim(),
+    },
+    thresholds: {
+      gpu_health_min_score:        parseInt(document.getElementById('gpuHealthMin').value) || 60,
+      gpu_temp_critical_c:         parseInt(document.getElementById('gpuTempCrit').value)  || 88,
+      fleet_capacity_critical_pct: parseInt(document.getElementById('fleetCapCrit').value) || 90,
+    },
+    events: {
+      price_spike:     document.getElementById('evtPriceSpike').checked,
+      gpu_health:      document.getElementById('evtGpuHealth').checked,
+      gpu_anomaly:     document.getElementById('evtGpuAnomaly').checked,
+      gpu_temperature: document.getElementById('evtGpuTemp').checked,
+      fleet_offline:   document.getElementById('evtFleetOffline').checked,
+    }
+  };
+  const statusEl = document.getElementById('alertsSaveStatus');
+  const btn      = document.getElementById('alertsSaveBtn');
+  try {
+    const resp = await fetch('/api/v1/alerts/config', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const d = await resp.json();
+    if (d.status === 'ok') {
+      statusEl.className = 'alerts-status ok';
+      statusEl.textContent = '✓ Configuration saved';
+      btn.textContent = 'Save Configuration';
+      _alertsDirty = false;
+      loadAlertConfig();
+    } else {
+      throw new Error(d.detail || 'Unknown error');
+    }
+  } catch(e) {
+    statusEl.className = 'alerts-status err';
+    statusEl.textContent = '✗ Save failed: ' + e.message;
+  }
+  setTimeout(() => { statusEl.textContent = ''; }, 4000);
+}
+
+async function sendTestAlert() {
+  const statusEl = document.getElementById('alertsSaveStatus');
+  statusEl.className = 'alerts-status ok';
+  statusEl.textContent = '⏳ Sending test alert...';
+  try {
+    const resp = await fetch('/api/v1/alerts/test', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({channel: 'both'})
+    });
+    const d = await resp.json();
+    statusEl.textContent = '✓ ' + (d.message || 'Test alert sent');
+    setTimeout(loadAlertHistory, 1500);
+  } catch(e) {
+    statusEl.className = 'alerts-status err';
+    statusEl.textContent = '✗ Test failed: ' + e.message;
+  }
+  setTimeout(() => { statusEl.textContent = ''; }, 5000);
+}
+
+async function loadAlertSummary() {
+  try {
+    const d = await apiFetch('/alerts/summary');
+    const s = d.summary;
+    if (!s) return;
+    document.getElementById('alertKpiTotal').textContent = s.total.toLocaleString();
+    document.getElementById('alertKpi24h').textContent   = s.last_24h.toLocaleString();
+  } catch(e) { console.warn('Alert summary:', e); }
+}
+
+async function loadAlertHistory() {
+  const el = document.getElementById('alertHistoryLog');
+  if (!el) return;
+  try {
+    const d = await apiFetch('/alerts/history?limit=30');
+    const entries = d.entries || [];
+    if (!entries.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0"><i class="fa-solid fa-check-circle" style="color:var(--green);margin-right:8px"></i>No alerts fired yet.</div>';
+      return;
+    }
+    el.innerHTML = entries.map(a => {
+      const dt   = new Date(a.fired_at + 'Z');
+      const time = dt.toLocaleString('en-US', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:false});
+      const emailChip   = a.email_sent   ? '<span class="delivery-chip sent">email ✓</span>'   : '<span class="delivery-chip skip">email —</span>';
+      const webhookChip = a.webhook_sent ? '<span class="delivery-chip sent">webhook ✓</span>' : '<span class="delivery-chip skip">webhook —</span>';
+      const errChip     = a.error        ? '<span class="delivery-chip fail">error</span>'       : '';
+      return '<div class="alert-log-entry">' +
+        '<div class="alert-log-dot ' + a.level + '"></div>' +
+        '<div style="flex:1">' +
+          '<div class="alert-log-title">' + a.title + '</div>' +
+          '<div class="alert-log-meta">' + a.event_type + ' · ' + time + '</div>' +
+          '<div class="alert-log-delivery">' + emailChip + webhookChip + errChip + '</div>' +
+        '</div></div>';
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;">Failed to load history.</div>';
+  }
+}
+
+function initAlertsTab() {
+  loadAlertConfig();
+  loadAlertSummary();
+  loadAlertHistory();
+  setInterval(loadAlertSummary, 60000);
+  setInterval(loadAlertHistory, 30000);
+}
+// ═══════════════════════════════════════════════════════
+//  END ALERTS TAB
+// ═══════════════════════════════════════════════════════
+
+
+// ═══════════════════════════════════════════════════════
+//  WEATHER & RESILIENCE TAB
+// ═══════════════════════════════════════════════════════
+const WX_REFRESH_MS = 300000; // 5 min
+let _wxTimer = null;
+let _wxData  = null;
+
+const WX_ICONS = {
+  tornado:   '🌪️', hurricane: '🌀', blizzard: '❄️',
+  heat:      '🌡️', earthquake: '🫨', normal: '✅'
+};
+const WX_LEVEL_COLORS = {
+  critical: 'var(--red)', warning: 'var(--amber)',
+  elevated: 'var(--cyan)', normal:  'var(--green)'
+};
+
+async function loadWeatherSummary() {
+  try {
+    const d = await apiFetch('/weather/summary');
+    _wxData = d;
+
+    // KPIs
+    document.getElementById('wxKpiAlerts').textContent     = d.total_alerts || '0';
+    const sitesAtRisk = (d.sites || []).filter(s => s.status === 'critical' || s.status === 'warning').length;
+    document.getElementById('wxKpiSitesAtRisk').textContent = sitesAtRisk;
+    const covered = (d.sites || []).filter(s => s.status === 'normal').length;
+    document.getElementById('wxKpiBackup').textContent      = covered + '/' + (d.sites || []).length;
+    document.getElementById('wxKpiChecked').textContent     = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
+
+    renderWeatherSiteCards(d.sites || []);
+    renderRunwayGrid(d.sites || []);
+    renderCorrStrip(d.sites || []);
+  } catch(e) { console.warn('Weather summary:', e); }
+}
+
+function renderWeatherSiteCards(sites) {
+  const el = document.getElementById('wxSiteGrid');
+  if (!sites.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;grid-column:span 3">No sites configured.</div>'; return; }
+
+  el.innerHTML = sites.map(s => {
+    const alertsHtml = s.alerts && s.alerts.length
+      ? s.alerts.map(a =>
+          '<div class="wsc-alert-item">' +
+          '<span class="wsc-alert-icon">' + (WX_ICONS[a.event_type] || '⚠️') + '</span>' +
+          a.headline + '</div>'
+        ).join('')
+      : '<div class="wsc-no-alerts">✅ No active alerts</div>';
+
+    return '<div class="weather-site-card ' + s.status + '">' +
+      '<div class="wsc-header">' +
+        '<div><div class="wsc-name">' + s.site_name + '</div>' +
+        '<div class="wsc-region">' + s.iso_region + '</div></div>' +
+        '<div class="wsc-badge ' + s.status + '">' + s.status.toUpperCase() + '</div>' +
+      '</div>' +
+      '<div class="wsc-alert-list">' + alertsHtml + '</div>' +
+      '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:8px;font-family:var(--mono)">' +
+        '<span>UPS ' + s.ups_mwh + ' MWh</span>' +
+        '<span>Gen ' + s.gen_kw + ' kW</span>' +
+        '<span>' + s.normal_draw_kw + ' kW draw</span>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function renderRunwayGrid(sites) {
+  const el = document.getElementById('wxRunwayGrid');
+  if (!sites.length) return;
+
+  el.innerHTML = sites.map(s => {
+    const ups_kwh   = s.ups_mwh * 1000;
+    const draw      = s.normal_draw_kw || 500;
+    const gen       = s.gen_kw || 0;
+    const genCovers = gen >= draw;
+
+    // Get worst-case event duration from active alerts
+    let worstDuration = 4; // default 4hr assumption
+    if (s.alerts && s.alerts.length) {
+      const durs = s.alerts.map(a => a.duration_hrs || 4);
+      worstDuration = Math.max(...durs);
+    }
+
+    const fullHrs = genCovers ? worstDuration : Math.round((ups_kwh / draw) * 10) / 10;
+    const covered = fullHrs >= worstDuration;
+    const cardCls = covered ? 'ok' : fullHrs >= worstDuration * 0.5 ? 'warn' : 'crit';
+
+    // Deferred scenario (20% reduction)
+    const defDraw = draw * 0.80;
+    const defHrs  = genCovers ? worstDuration : Math.round((ups_kwh / defDraw) * 10) / 10;
+
+    // Scale options
+    let scaleHtml = '';
+    if (!covered) {
+      const scales = [90, 75, 60, 50].map(pct => {
+        const sDrawKw = draw * pct / 100;
+        const sHrs = genCovers ? worstDuration : Math.round((ups_kwh / sDrawKw) * 10) / 10;
+        const ok   = sHrs >= worstDuration;
+        return '<tr><td>' + pct + '% capacity</td>' +
+          '<td>' + sDrawKw.toFixed(0) + ' kW</td>' +
+          '<td class="' + (ok ? 'covered' : 'uncovered') + '">' + sHrs + ' hrs ' + (ok ? '✓' : '✗') + '</td></tr>';
+      });
+      scaleHtml = '<table class="scale-table" style="margin-top:10px">' +
+        '<tr><th>Capacity</th><th>Draw</th><th>Runway</th></tr>' +
+        scales.join('') + '</table>';
+    }
+
+    const recText = covered
+      ? 'Full capacity sustainable for worst-case event duration.'
+      : 'Defer non-critical jobs → reduces draw to ' + defDraw.toFixed(0) + ' kW → ' + defHrs + ' hrs runway.';
+
+    return '<div class="runway-card ' + cardCls + '">' +
+      '<div class="runway-site-name">' + s.site_name + '</div>' +
+      '<div class="runway-metric"><span class="runway-metric-label">Normal Draw</span><span class="runway-metric-value">' + draw + ' kW</span></div>' +
+      '<div class="runway-metric"><span class="runway-metric-label">UPS Capacity</span><span class="runway-metric-value">' + ups_kwh.toLocaleString() + ' kWh</span></div>' +
+      '<div class="runway-metric"><span class="runway-metric-label">Generator</span><span class="runway-metric-value ' + (genCovers ? 'ok' : 'warn') + '">' + gen + ' kW ' + (genCovers ? '✓' : '⚠') + '</span></div>' +
+      '<div class="runway-metric"><span class="runway-metric-label">Event Duration</span><span class="runway-metric-value">' + worstDuration + ' hrs</span></div>' +
+      '<div class="runway-metric"><span class="runway-metric-label">Full Capacity Runway</span><span class="runway-metric-value ' + (covered ? 'ok' : 'crit') + '">' + fullHrs + ' hrs ' + (covered ? '✓' : '✗') + '</span></div>' +
+      scaleHtml +
+      '<div class="runway-rec">' + recText + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function renderCorrStrip(sites) {
+  const el = document.getElementById('wxCorrStrip');
+  // Build per-region worst correlation from all active alerts
+  const regionMap = {};
+  sites.forEach(s => {
+    if (!s.alerts || !s.alerts.length) return;
+    s.alerts.forEach(a => {
+      const region = s.iso_region;
+      if (!region) return;
+      const corr = a.grid_correlation || {};
+      if (!regionMap[region] || (corr.prob || 0) > regionMap[region].prob) {
+        regionMap[region] = {
+          prob:        corr.prob        || 0,
+          spike_pct:   corr.est_spike_pct || 0,
+          event_type:  a.event_type,
+          level:       a.level,
+        };
+      }
+    });
+  });
+
+  const regions = ['CAISO','ERCOT','NYISO','ISONE','PJM'];
+  const hasAny = regions.some(r => regionMap[r]);
+  if (!hasAny) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:12px;grid-column:span 5;padding:8px 0;">✅ No active weather events — all regions normal.</div>';
+    return;
+  }
+
+  el.innerHTML = regions.map(region => {
+    const c = regionMap[region];
+    if (!c) return '<div class="corr-cell normal">' +
+      '<div class="corr-region">' + region + '</div>' +
+      '<div class="corr-prob" style="color:var(--green)">—</div>' +
+      '<div class="corr-label">Normal</div></div>';
+    const pctColor = c.prob >= 0.7 ? 'var(--red)' : c.prob >= 0.4 ? 'var(--amber)' : 'var(--cyan)';
+    return '<div class="corr-cell ' + c.level + '">' +
+      '<div class="corr-region">' + region + '</div>' +
+      '<div class="corr-prob" style="color:' + pctColor + '">' + Math.round(c.prob * 100) + '%</div>' +
+      '<div class="corr-label">' + (WX_ICONS[c.event_type] || '') + ' spike prob</div>' +
+      '<div style="font-size:10px;color:var(--muted);margin-top:2px;font-family:var(--mono)">+' + c.spike_pct + '% est</div>' +
+    '</div>';
+  }).join('');
+}
+
+async function triggerWeatherCheck() {
+  const btn = document.querySelector('[onclick="triggerWeatherCheck()"]');
+  if (btn) { btn.textContent = '⏳ Checking...'; btn.disabled = true; }
+  try {
+    await apiFetch('/weather/check-all');
+    setTimeout(() => {
+      loadWeatherSummary();
+      if (btn) { btn.textContent = '↻ Check Now'; btn.disabled = false; }
+    }, 5000);
+  } catch(e) {
+    if (btn) { btn.textContent = '↻ Check Now'; btn.disabled = false; }
+  }
+}
+
+async function loadSiteConfig() {
+  const siteId = document.getElementById('wxConfigSite').value;
+  const form   = document.getElementById('wxConfigForm');
+  if (!siteId) { form.style.display = 'none'; return; }
+  form.style.display = 'grid';
+  try {
+    const d = await apiFetch('/weather/sites');
+    const site = (d.sites || {})[siteId];
+    if (site) {
+      document.getElementById('wxUps').value  = site.ups_capacity_mwh  || '';
+      document.getElementById('wxGen').value  = site.generator_kw      || '';
+      document.getElementById('wxDraw').value = site.normal_draw_kw    || '';
+    }
+  } catch(e) { console.warn('Site config load:', e); }
+}
+
+async function saveSiteConfig() {
+  const siteId = document.getElementById('wxConfigSite').value;
+  if (!siteId) return;
+  const statusEl = document.getElementById('wxSaveStatus');
+  try {
+    const resp = await fetch('/api/v1/weather/sites/' + siteId, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        ups_capacity_mwh: parseFloat(document.getElementById('wxUps').value)  || 10,
+        generator_kw:     parseFloat(document.getElementById('wxGen').value)  || 1500,
+        normal_draw_kw:   parseFloat(document.getElementById('wxDraw').value) || 500,
+      })
+    });
+    const d = await resp.json();
+    if (d.status === 'ok') {
+      statusEl.className = 'alerts-status ok';
+      statusEl.textContent = '✓ Saved';
+      loadWeatherSummary();
+    }
+  } catch(e) {
+    statusEl.className = 'alerts-status err';
+    statusEl.textContent = '✗ Save failed';
+  }
+  setTimeout(() => { statusEl.textContent = ''; }, 3000);
+}
+
+function initWeatherTab() {
+  loadWeatherSummary();
+  if (_wxTimer) clearInterval(_wxTimer);
+  _wxTimer = setInterval(loadWeatherSummary, WX_REFRESH_MS);
+}
+// ═══════════════════════════════════════════════════════
+//  END WEATHER TAB
+// ═══════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════
+//  SAVINGS LEDGER + SPIKE WARNING
+// ═══════════════════════════════════════════════════════
+const SAVINGS_REFRESH_MS = 30000;
+const SPIKE_REFRESH_MS   = 60000;
+let _spikeTimer    = null;
+let _savingsTimer  = null;
+let _lastSpikeData = null;
+const SPIKE_ICONS  = {critical:'🔴', warning:'🟡', elevated:'🔵', normal:'🟢'};
+const SPIKE_LABELS = {critical:'CRITICAL', warning:'WARNING', elevated:'ELEVATED', normal:'NORMAL'};
+
+async function loadSavingsSummary() {
+  try {
+    const d = await apiFetch('/savings/summary');
+    const s = d.summary && d.summary.all_time;
+    if (!s) return;
+    document.getElementById('savingsHeroAmount').textContent =
+      '$' + s.total_saved_usd.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+    document.getElementById('savingsHeroPct').textContent    = s.savings_pct.toFixed(1) + '% reduction';
+    document.getElementById('savingsDecisions').textContent  = s.decisions.toLocaleString();
+    document.getElementById('savingsNaive').textContent      = '$' + s.total_naive_usd.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+    document.getElementById('savingsActual').textContent     = '$' + s.total_actual_usd.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+    document.getElementById('savingsAvgPct').textContent     = s.avg_savings_pct.toFixed(1) + '%';
+  } catch(e) { console.warn('Savings summary:', e); }
+}
+
+async function loadSavingsByRegion() {
+  try {
+    const d = await apiFetch('/savings/by-region');
+    const regions = d.regions || [];
+    if (!regions.length) return;
+    const maxSaved = Math.max(...regions.map(r => r.total_saved));
+    document.getElementById('savingsRegions').innerHTML = regions.map(r => {
+      const pct = maxSaved > 0 ? (r.total_saved / maxSaved * 100) : 0;
+      return '<div class="savings-region-row">' +
+        '<div class="savings-region-label">' + r.region + '</div>' +
+        '<div class="savings-region-bar-wrap"><div class="savings-region-bar" style="width:' + pct.toFixed(1) + '%"></div></div>' +
+        '<div class="savings-region-value">$' + r.total_saved.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) + '</div>' +
+        '</div>';
+    }).join('');
+  } catch(e) { console.warn('Savings by region:', e); }
+}
+
+async function checkSpikeWarning() {
+  try {
+    const d = await apiFetch('/savings/spike-warning');
+    _lastSpikeData = d;
+    const level    = d.overall_level || 'normal';
+    const warnings = d.warnings || [];
+    const checkedAt = d.checked_at
+      ? new Date(d.checked_at + 'Z').toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false})
+      : '';
+    const checkedEl = document.getElementById('spikeCheckedAt');
+    if (checkedEl) checkedEl.textContent = checkedAt ? 'Last checked ' + checkedAt : '';
+
+    const allRegions = ['CAISO','ERCOT','NYISO','ISONE','PJM'];
+    const warnMap = {};
+    warnings.forEach(w => { warnMap[w.region] = w; });
+    const riskGrid = document.getElementById('spikeRiskGrid');
+    if (riskGrid) riskGrid.innerHTML = allRegions.map(function(region) {
+      const w    = warnMap[region];
+      const rlvl = w ? w.level : 'normal';
+      const ratio = w ? (w.ratio.toFixed(1) + '&#215; forecast') : 'Normal';
+      return '<div class="spike-risk-cell ' + rlvl + '">' +
+        '<div class="spike-risk-region">' + region + '</div>' +
+        '<div class="spike-risk-indicator">' + SPIKE_ICONS[rlvl] + '</div>' +
+        '<div class="spike-risk-level">' + SPIKE_LABELS[rlvl] + '</div>' +
+        '<div class="spike-risk-ratio">' + ratio + '</div></div>';
+    }).join('');
+
+    const banner = document.getElementById('spikeBanner');
+    if (!banner) return;
+    if (level === 'normal') { banner.style.display = 'none'; updateTabBadge(null); return; }
+    banner.className = 'spike-banner ' + level;
+    banner.style.display = 'block';
+    const icons  = {critical:'⚡', warning:'⚠️', elevated:'📈'};
+    const titles = {critical:'🔴 Critical Price Spike Detected', warning:'⚠️ Price Spike Warning', elevated:'📈 Elevated Price Risk'};
+    document.getElementById('spikeBannerIcon').textContent  = icons[level]  || '⚡';
+    document.getElementById('spikeBannerTitle').textContent = titles[level] || 'Price Alert';
+    document.getElementById('spikeBannerDetail').textContent = warnings.map(w => w.message).join('  ·  ');
+    updateTabBadge(level, warnings.length);
+  } catch(e) { console.warn('Spike warning:', e); }
+}
+
+function updateTabBadge(level, count) {
+  const tabs = document.querySelectorAll('.tab');
+  let overviewTab = null;
+  tabs.forEach(function(t) { if (t.textContent.toLowerCase().includes('overview')) overviewTab = t; });
+  if (!overviewTab) return;
+  let badge = overviewTab.querySelector('.tab-badge');
+  if (!level) { if (badge) badge.remove(); return; }
+  if (!badge) { badge = document.createElement('span'); badge.className = 'tab-badge'; overviewTab.appendChild(badge); }
+  badge.className = 'tab-badge ' + level;
+  badge.textContent = count || '!';
+}
+
+function openSpikeModal() {
+  if (!_lastSpikeData) return;
+  const warnings = _lastSpikeData.warnings || [];
+  const level    = _lastSpikeData.overall_level || 'warning';
+  const titles   = {critical:'⚡ Critical — Immediate Spike Forecast', warning:'⚠️ Price Spike Warning', elevated:'📈 Elevated Price Risk Detected'};
+  document.getElementById('spikeModalTitle').textContent = titles[level] || '⚡ Price Alert';
+  document.getElementById('spikeModalSubtitle').textContent =
+    warnings.length + ' region' + (warnings.length !== 1 ? 's' : '') + ' with elevated forecast risk · ' + new Date().toLocaleTimeString();
+  document.getElementById('spikeModalWarnings').innerHTML = warnings.map(function(w) {
+    return '<div class="spike-modal-item ' + w.level + '">' +
+      '<div class="spike-modal-region">' + w.region + ' — ' + SPIKE_LABELS[w.level] + '</div>' +
+      '<div class="spike-modal-msg">' + w.message + '</div></div>';
+  }).join('');
+  document.getElementById('spikeModal').classList.add('open');
+}
+
+function closeSpikeModal() {
+  document.getElementById('spikeModal').classList.remove('open');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('spikeModal');
+  if (modal) modal.addEventListener('click', function(e) { if (e.target === this) closeSpikeModal(); });
+});
+
+function initSavingsAndSpike() {
+  loadSavingsSummary();
+  loadSavingsByRegion();
+  checkSpikeWarning();
+  _savingsTimer = setInterval(function() { loadSavingsSummary(); loadSavingsByRegion(); }, SAVINGS_REFRESH_MS);
+  _spikeTimer   = setInterval(checkSpikeWarning, SPIKE_REFRESH_MS);
+}
+// ═══════════════════════════════════════════════════════
+//  END SAVINGS LEDGER + SPIKE WARNING
+// ═══════════════════════════════════════════════════════
+
 init();
+initSavingsAndSpike();
+initAlertsTab();
+initWeatherTab();
 </script>
+
+<div class="spike-modal-overlay" id="spikeModal">
+  <div class="spike-modal">
+    <button class="spike-modal-close" onclick="closeSpikeModal()">&#x2715;</button>
+    <div class="spike-modal-title" id="spikeModalTitle">&#x26A1; Price Spike Alert</div>
+    <div class="spike-modal-subtitle" id="spikeModalSubtitle">Significant price movement detected in one or more regions</div>
+    <div class="spike-modal-warnings" id="spikeModalWarnings"></div>
+    <div class="spike-modal-action">
+      <strong>Recommended action:</strong> Review jobs currently queued for dispatch.
+      Any flexible workload can be deferred through the RL Agent tab —
+      the agent will reschedule into the next price valley automatically.
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

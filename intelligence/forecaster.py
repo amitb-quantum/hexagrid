@@ -1,5 +1,5 @@
 """
-Energia - Phase 2: Power Demand Forecasting (TF LSTM)
+HexaGrid - Phase 2: Power Demand Forecasting (TF LSTM)
 ======================================================
 Trains a multi-horizon LSTM on Digital Twin telemetry to predict
 grid demand at 30, 60, and 120 minutes ahead.
@@ -212,7 +212,7 @@ def build_lstm_model(
     # Concatenate into single output tensor (n_horizons,)
     output = layers.Concatenate(name='multi_horizon_output')(outputs)
 
-    model = tf.keras.Model(inputs=inp, outputs=output, name='Energia_LSTM_Forecaster')
+    model = tf.keras.Model(inputs=inp, outputs=output, name='HexaGrid_LSTM_Forecaster')
     return model
 
 
@@ -229,7 +229,7 @@ def train_model(
     """Train LSTM on GPU, return model and training history."""
 
     os.makedirs(models_dir, exist_ok=True)
-    ckpt_path = os.path.join(models_dir, 'energia_lstm_best.h5')
+    ckpt_path = os.path.join(models_dir, 'hexagrid_lstm_best.h5')
 
     model = build_lstm_model(
         lookback    = X_train.shape[1],
@@ -336,7 +336,7 @@ def plot_forecasts(
 
     fig = plt.figure(figsize=(20, 14), facecolor='#0d1117')
     fig.suptitle(
-        "ENERGIA - Phase 2: LSTM Power Demand Forecaster",
+        "HEXAGRID - Phase 2: LSTM Power Demand Forecaster",
         color='white', fontsize=14, fontweight='bold', y=0.98
     )
 
@@ -445,7 +445,7 @@ def plot_forecasts(
 
     os.makedirs(save_dir, exist_ok=True)
     ts        = datetime.now().strftime("%Y%m%d_%H%M%S")
-    save_path = os.path.join(save_dir, f"energia_forecast_{ts}.png")
+    save_path = os.path.join(save_dir, f"hexagrid_forecast_{ts}.png")
     plt.savefig(save_path, dpi=150, bbox_inches='tight',
                 facecolor='#0d1117', edgecolor='none')
     plt.close()
@@ -470,7 +470,7 @@ def run_forecast_pipeline(
     os.makedirs(reports_dir, exist_ok=True)
 
     print(f"\n{'='*58}")
-    print(f"  ENERGIA - Phase 2: Power Demand Forecasting")
+    print(f"  HEXAGRID - Phase 2: Power Demand Forecasting")
     print(f"{'='*58}")
     print(f"  Generating {sim_hours}h of Digital Twin telemetry...")
 
@@ -479,7 +479,7 @@ def run_forecast_pipeline(
         num_racks         = num_racks,
         duration_minutes  = sim_hours * 60,
         efficiency_profile= profile,
-        facility_name     = "Energia-FC-Train",
+        facility_name     = "HexaGrid-FC-Train",
         seed              = 0,
     )
     raw_df = twin.run()
@@ -522,7 +522,7 @@ def run_forecast_pipeline(
     print(f"  Scalers saved -> {models_dir}\n")
 
     # ── Step 5: Train or Load ─────────────────────────────────────────────────
-    ckpt_path = os.path.join(models_dir, 'energia_lstm_best.h5')
+    ckpt_path = os.path.join(models_dir, 'hexagrid_lstm_best.h5')
     history   = None
 
     if load_model and os.path.exists(ckpt_path):
@@ -570,7 +570,7 @@ def run_forecast_pipeline(
 # ══════════════════════════════════════════════════════════════════════════════
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Energia Phase 2 - LSTM Forecaster')
+    parser = argparse.ArgumentParser(description='HexaGrid Phase 2 - LSTM Forecaster')
     parser.add_argument('--racks',      type=int,  default=4,
                         help='Number of GPU racks in simulation')
     parser.add_argument('--hours',      type=int,  default=72,

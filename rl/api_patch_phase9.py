@@ -1,5 +1,5 @@
 """
-Energia Phase 9 — API Patch
+HexaGrid Phase 9 — API Patch
 ============================
 Adds multi-site fleet orchestration endpoints to api/api.py.
 
@@ -10,7 +10,7 @@ New endpoints:
   POST /api/v1/fleet/route                → route a workload across fleet
   GET  /api/v1/fleet/history              → last N routing decisions
 
-Run from ~/energia:
+Run from ~/hexagrid:
     python rl/api_patch_phase9.py
 """
 
@@ -21,7 +21,7 @@ API_PATH = os.path.abspath(
 )
 
 if not os.path.exists(API_PATH):
-    print(f"  ERROR: {API_PATH} not found. Run from ~/energia.")
+    print(f"  ERROR: {API_PATH} not found. Run from ~/hexagrid.")
     sys.exit(1)
 
 content = open(API_PATH).read()

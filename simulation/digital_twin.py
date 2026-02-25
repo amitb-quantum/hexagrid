@@ -1,5 +1,5 @@
 """
-Energia - Phase 1: Digital Twin Simulation Engine
+HexaGrid - Phase 1: Digital Twin Simulation Engine
 ==================================================
 Models the full data center power chain as a discrete-event simulation:
 
@@ -200,7 +200,7 @@ class DataCenterDigitalTwin:
         num_racks:        int   = 4,
         duration_minutes: int   = 480,   # 8 hours default
         efficiency_profile: str = "standard",   # "standard" | "heron"
-        facility_name:    str   = "Energia-DC-01",
+        facility_name:    str   = "HexaGrid-DC-01",
         seed:             int   = 42,
     ):
         self.facility_name      = facility_name
@@ -331,7 +331,7 @@ class DataCenterDigitalTwin:
         loss_reduction_pct = (1 - chain_eff) * 100
 
         print(f"{'═'*56}")
-        print(f"  ⚡  ENERGIA DIGITAL TWIN — SIMULATION REPORT")
+        print(f"  ⚡  HEXAGRID DIGITAL TWIN — SIMULATION REPORT")
         print(f"{'═'*56}")
         print(f"  Facility          : {self.facility_name}")
         print(f"  Profile           : {self.efficiency_profile.upper()}")
@@ -389,7 +389,7 @@ class DataCenterDigitalTwin:
 
         fig = plt.figure(figsize=(18, 12), facecolor='#0d1117')
         fig.suptitle(
-            f"⚡  ENERGIA — {self.facility_name}  |  "
+            f"⚡  HEXAGRID — {self.facility_name}  |  "
             f"{self.num_racks} Racks / {self.num_racks*8} GPUs  |  "
             f"Profile: {self.efficiency_profile.upper()}",
             color='white', fontsize=14, fontweight='bold', y=0.98
@@ -497,7 +497,7 @@ class DataCenterDigitalTwin:
             ts = datetime.now().strftime("%Y%m%d_%H%M%S")
             save_path = os.path.join(
                 os.path.dirname(__file__), '..', 'reports',
-                f"energia_twin_{self.efficiency_profile}_{ts}.png"
+                f"hexagrid_twin_{self.efficiency_profile}_{ts}.png"
             )
         os.makedirs(os.path.dirname(os.path.abspath(save_path)), exist_ok=True)
         plt.savefig(save_path, dpi=150, bbox_inches='tight',
@@ -517,7 +517,7 @@ def run_comparison(num_racks: int = 4, duration_minutes: int = 480):
     comparison report and plot.
     """
     print("\n" + "═"*56)
-    print("  ⚡  ENERGIA — STANDARD vs HERON COMPARISON RUN")
+    print("  ⚡  HEXAGRID — STANDARD vs HERON COMPARISON RUN")
     print("═"*56)
 
     results = {}
@@ -526,7 +526,7 @@ def run_comparison(num_racks: int = 4, duration_minutes: int = 480):
             num_racks=num_racks,
             duration_minutes=duration_minutes,
             efficiency_profile=profile,
-            facility_name=f"Energia-DC-01-{profile.upper()}",
+            facility_name=f"HexaGrid-DC-01-{profile.upper()}",
             seed=42,
         )
         df = twin.run()
@@ -575,7 +575,7 @@ def run_comparison(num_racks: int = 4, duration_minutes: int = 480):
 # ══════════════════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Energia Digital Twin Simulation")
+    parser = argparse.ArgumentParser(description="HexaGrid Digital Twin Simulation")
     parser.add_argument('--racks',    type=int,  default=4,    help='Number of GPU racks')
     parser.add_argument('--duration', type=int,  default=480,  help='Simulation duration (minutes)')
     parser.add_argument('--profile',  type=str,  default='both',
@@ -590,7 +590,7 @@ if __name__ == "__main__":
             num_racks=args.racks,
             duration_minutes=args.duration,
             efficiency_profile=args.profile,
-            facility_name="Energia-DC-01",
+            facility_name="HexaGrid-DC-01",
         )
         twin.run()
         twin.report()

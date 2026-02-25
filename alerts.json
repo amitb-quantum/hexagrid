@@ -1,0 +1,37 @@
+{
+  "enabled": true,
+  "dedup_window_minutes": 30,
+  "email": {
+    "enabled": true,
+    "smtp_host": "smtp.gmail.com",
+    "smtp_port": 587,
+    "smtp_user": "",
+    "smtp_password": "",
+    "from_address": "hexagrid@yourdomain.com",
+    "to_addresses": []
+  },
+  "webhook": {
+    "enabled": false,
+    "url": "",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "include_metadata": true
+  },
+  "thresholds": {
+    "price_spike_levels": [
+      "critical",
+      "warning"
+    ],
+    "gpu_health_min_score": 60,
+    "gpu_temp_critical_c": 88,
+    "fleet_capacity_critical_pct": 90
+  },
+  "events": {
+    "price_spike": true,
+    "gpu_health": true,
+    "gpu_anomaly": true,
+    "gpu_temperature": true,
+    "fleet_offline": true
+  }
+}

@@ -1,7 +1,7 @@
 """
-Energia Phase 7 — Reinforcement Learning Environment
+HexaGrid Phase 7 — Reinforcement Learning Environment
 ======================================================
-Custom Gymnasium environment that wraps the Energia Digital Twin.
+Custom Gymnasium environment that wraps the HexaGrid Digital Twin.
 
 The agent observes:
   - Current grid electricity price
@@ -19,11 +19,11 @@ The agent can take 9 discrete actions (3x3 MultiDiscrete):
 Reward = cost_savings_vs_naive  - sla_penalty - efficiency_penalty
 
 Install into your project:
-    cp energia_env.py ~/energia/rl/energia_env.py
+    cp hexagrid_env.py ~/hexagrid/rl/hexagrid_env.py
 
 Usage:
-    from rl.energia_env import EnergiaEnv
-    env = EnergiaEnv()
+    from rl.hexagrid_env import HexaGridEnv
+    env = HexaGridEnv()
     obs, info = env.reset()
     obs, reward, terminated, truncated, info = env.step(env.action_space.sample())
 """
@@ -150,9 +150,9 @@ class JobQueue:
         return min(1.0, self.max_age / MAX_DEFER_MINUTES) if self.queue else 0.0
 
 
-class EnergiaEnv(gym.Env):
+class HexaGridEnv(gym.Env):
     """
-    Energia RL Environment — 26-dim observation, MultiDiscrete([3,3,3]) actions.
+    HexaGrid RL Environment — 26-dim observation, MultiDiscrete([3,3,3]) actions.
 
     Observation vector:
       [0]     current price (normalized)

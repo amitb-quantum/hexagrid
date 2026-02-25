@@ -1,15 +1,15 @@
 """
-Energia Phase 7 — API Bug Fix
+HexaGrid Phase 7 — API Bug Fix
 ==============================
 Fixes two bugs introduced by rl_api_patch_phase7.py:
 
   Bug 1: _update_job() doesn't exist — real functions are
           _set_running(), _set_done(), _set_error()
 
-  Bug 2: 'from agent import EnergiaAgent' fails because the
+  Bug 2: 'from agent import HexaGridAgent' fails because the
           file is named rl_agent.py, not agent.py
 
-Run from ~/energia:
+Run from ~/hexagrid:
     python rl/rl_api_fix_phase7.py
 """
 
@@ -20,7 +20,7 @@ API_PATH = os.path.abspath(
 )
 
 if not os.path.exists(API_PATH):
-    print(f"ERROR: {API_PATH} not found. Run from ~/energia.")
+    print(f"ERROR: {API_PATH} not found. Run from ~/hexagrid.")
     sys.exit(1)
 
 content = open(API_PATH).read()
@@ -50,8 +50,8 @@ content = re.sub(
 
 # ── Fix 2: wrong module name ──────────────────────────────────────────────────
 content = content.replace(
-    "from agent import EnergiaAgent",
-    "from rl_agent import EnergiaAgent"
+    "from agent import HexaGridAgent",
+    "from rl_agent import HexaGridAgent"
 )
 
 if content == original:

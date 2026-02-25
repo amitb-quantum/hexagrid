@@ -1,0 +1,57 @@
+{
+  "dc_east": {
+    "name": "East Coast DC",
+    "lat": 39.0438,
+    "lon": -77.4874,
+    "iso_region": "PJM",
+    "ups_capacity_mwh": 10.0,
+    "generator_kw": 1500.0,
+    "normal_draw_kw": 500.0,
+    "monitor_earthquake": true,
+    "enabled": true
+  },
+  "dc_mid": {
+    "name": "Mid-Atlantic DC",
+    "lat": 38.9072,
+    "lon": -77.0369,
+    "iso_region": "PJM",
+    "ups_capacity_mwh": 8.0,
+    "generator_kw": 1200.0,
+    "normal_draw_kw": 420.0,
+    "monitor_earthquake": true,
+    "enabled": true
+  },
+  "dc_texas": {
+    "name": "Texas DC",
+    "lat": 30.2672,
+    "lon": -97.7431,
+    "iso_region": "ERCOT",
+    "ups_capacity_mwh": 12.0,
+    "generator_kw": 2000.0,
+    "normal_draw_kw": 650.0,
+    "monitor_earthquake": false,
+    "enabled": true
+  },
+  "dc_california": {
+    "name": "California DC",
+    "lat": 37.3382,
+    "lon": -121.8863,
+    "iso_region": "CAISO",
+    "ups_capacity_mwh": 15.0,
+    "generator_kw": 2500.0,
+    "normal_draw_kw": 800.0,
+    "monitor_earthquake": true,
+    "enabled": true
+  },
+  "dc_newengland": {
+    "name": "New England DC",
+    "lat": 42.3601,
+    "lon": -71.0589,
+    "iso_region": "ISONE",
+    "ups_capacity_mwh": 6.0,
+    "generator_kw": 1000.0,
+    "normal_draw_kw": 350.0,
+    "monitor_earthquake": false,
+    "enabled": true
+  }
+}

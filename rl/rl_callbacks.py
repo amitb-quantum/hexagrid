@@ -1,5 +1,5 @@
 """
-Energia Phase 7 — Training Callbacks
+HexaGrid Phase 7 — Training Callbacks
 =====================================
 Custom Stable-Baselines3 callbacks for:
   - Live training metrics logged to JSON (feeds the dashboard)
@@ -7,7 +7,7 @@ Custom Stable-Baselines3 callbacks for:
   - Early stopping on plateau
 
 Install:
-    cp rl_callbacks.py ~/energia/rl/callbacks.py
+    cp rl_callbacks.py ~/hexagrid/rl/callbacks.py
 """
 
 import os
@@ -17,7 +17,7 @@ import numpy as np
 from stable_baselines3.common.callbacks import BaseCallback
 
 
-class EnergiaTrainingLogger(BaseCallback):
+class HexaGridTrainingLogger(BaseCallback):
     """
     Logs per-episode metrics to training_log.json every `log_freq` episodes.
     The dashboard polls GET /api/v1/rl/training_log to display live curves.

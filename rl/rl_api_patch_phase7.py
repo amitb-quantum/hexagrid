@@ -1,5 +1,5 @@
 """
-Energia Phase 7 — API Patch
+HexaGrid Phase 7 — API Patch
 ============================
 Adds RL agent endpoints to api/api.py.
 
@@ -20,7 +20,7 @@ API_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'api', 
 
 if not os.path.exists(API_PATH):
     print(f"ERROR: Cannot find {API_PATH}")
-    print("Run this script from the energia project root:  python rl/api_patch_phase7.py")
+    print("Run this script from the hexagrid project root:  python rl/api_patch_phase7.py")
     sys.exit(1)
 
 content = open(API_PATH).read()
@@ -50,8 +50,8 @@ def _get_rl_agent():
                 try:
                     _rl_sys_path = os.path.join(os.path.dirname(__file__), '..', 'rl')
                     sys.path.insert(0, _rl_sys_path)
-                    from agent import EnergiaAgent
-                    _rl_agent = EnergiaAgent()
+                    from agent import HexaGridAgent
+                    _rl_agent = HexaGridAgent()
                 except Exception as _e:
                     print(f"  [RL] Agent init failed: {_e}")
                     _rl_agent = None

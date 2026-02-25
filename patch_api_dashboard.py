@@ -1,6 +1,6 @@
 """
 Patches api.py to serve the dashboard HTML at GET /
-Run from the energia project root:
+Run from the hexagrid project root:
     python patch_api_dashboard.py
 """
 import os, sys
@@ -10,7 +10,7 @@ if not os.path.exists(api_path):
     # Try running from project root directly
     api_path = 'api/api.py'
 if not os.path.exists(api_path):
-    print(f"ERROR: Cannot find api/api.py — run this from the energia project root")
+    print(f"ERROR: Cannot find api/api.py — run this from the hexagrid project root")
     sys.exit(1)
 
 content = open(api_path).read()
@@ -46,11 +46,11 @@ _DASHBOARD = os.path.join(os.path.dirname(__file__), '..', 'dashboard', 'index.h
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def serve_dashboard():
-    \"\"\"Serve the Energia dashboard.\"\"\"
+    \"\"\"Serve the HexaGrid dashboard.\"\"\"
     if not os.path.exists(_DASHBOARD):
         return HTMLResponse(
             content="<h2>Dashboard not found</h2>"
-                    "<p>Place <code>index.html</code> in <code>energia/dashboard/</code></p>"
+                    "<p>Place <code>index.html</code> in <code>hexagrid/dashboard/</code></p>"
                     "<p><a href='/docs'>API docs →</a></p>",
             status_code=404,
         )

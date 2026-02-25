@@ -1,10 +1,10 @@
 """
-Energia Phase 7 — PPO Training Script
+HexaGrid Phase 7 — PPO Training Script
 =======================================
-Trains a PPO agent on the EnergiaEnv using Stable-Baselines3.
+Trains a PPO agent on the HexaGridEnv using Stable-Baselines3.
 
 Install into project:
-    cp rl_train.py ~/energia/rl/train.py
+    cp rl_train.py ~/hexagrid/rl/train.py
 
 Usage:
     # Quick smoke test (~30s)
@@ -34,8 +34,8 @@ from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.callbacks import CallbackList, EvalCallback
 
-from energia_env import EnergiaEnv
-from callbacks import EnergiaTrainingLogger, BestModelCheckpoint, EarlyStoppingCallback
+from hexagrid_env import HexaGridEnv
+from callbacks import HexaGridTrainingLogger, BestModelCheckpoint, EarlyStoppingCallback
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 ROOT      = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -77,7 +77,7 @@ def train(
 ) -> PPO:
 
     print(f"\n{'='*58}")
-    print(f"  Energia Phase 7 — PPO Training")
+    print(f"  HexaGrid Phase 7 — PPO Training")
     print(f"{'='*58}")
     print(f"  Run:     {run_name}")
     print(f"  Steps:   {total_steps:,}  |  Envs: {n_envs}  |  Racks: {n_racks}")
@@ -89,9 +89,9 @@ def train(
     from stable_baselines3.common.vec_env import DummyVecEnv
     vec_cls = DummyVecEnv  # safe in all environments
 
-    vec_env  = make_vec_env(lambda: Monitor(EnergiaEnv(n_racks=n_racks)),
+    vec_env  = make_vec_env(lambda: Monitor(HexaGridEnv(n_racks=n_racks)),
                             n_envs=n_envs, seed=42, vec_env_cls=vec_cls)
-    eval_env = make_vec_env(lambda: Monitor(EnergiaEnv(n_racks=n_racks, seed=999)),
+    eval_env = make_vec_env(lambda: Monitor(HexaGridEnv(n_racks=n_racks, seed=999)),
                             n_envs=1, vec_env_cls=vec_cls)
 
     # ── Model ─────────────────────────────────────────────────────────────────
@@ -111,7 +111,7 @@ def train(
     os.makedirs(run_log_dir, exist_ok=True)
     os.makedirs(run_mdl_dir, exist_ok=True)
 
-    logger_cb    = EnergiaTrainingLogger(run_log_dir, log_freq=log_freq, verbose=1)
+    logger_cb    = HexaGridTrainingLogger(run_log_dir, log_freq=log_freq, verbose=1)
     checkpoint_cb = BestModelCheckpoint(MODEL_DIR, check_freq=2000, verbose=1)
     early_stop_cb = EarlyStoppingCallback(check_freq=20_000, patience=5,
                                           min_delta=0.005, verbose=1)
@@ -171,10 +171,10 @@ def train(
 def evaluate(model_path: str, n_episodes: int = 20, n_racks: int = 4, render: bool = False):
     """Evaluate a saved model and print a performance report."""
     print(f"\n{'='*58}")
-    print(f"  Energia RL — Evaluation  |  {model_path}")
+    print(f"  HexaGrid RL — Evaluation  |  {model_path}")
     print(f"{'='*58}\n")
 
-    env   = Monitor(EnergiaEnv(n_racks=n_racks, seed=42,
+    env   = Monitor(HexaGridEnv(n_racks=n_racks, seed=42,
                                render_mode='human' if render else None))
     model = PPO.load(model_path)
 
@@ -209,7 +209,7 @@ def evaluate(model_path: str, n_episodes: int = 20, n_racks: int = 4, render: bo
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Energia Phase 7 — RL Training')
+    parser = argparse.ArgumentParser(description='HexaGrid Phase 7 — RL Training')
     parser.add_argument('--steps',  type=int, default=200_000)
     parser.add_argument('--envs',   type=int, default=8)
     parser.add_argument('--racks',  type=int, default=4)

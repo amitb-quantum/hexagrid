@@ -1,5 +1,5 @@
 """
-Energia Phase 8 — API Patch
+HexaGrid Phase 8 — API Patch
 ============================
 Adds carbon intensity endpoints to api/api.py.
 
@@ -9,7 +9,7 @@ New endpoints:
   GET  /api/v1/carbon/pareto          → cost vs carbon Pareto analysis
   GET  /api/v1/carbon/recommend       → carbon-aware dispatch recommendation
 
-Run from ~/energia:
+Run from ~/hexagrid:
     python rl/api_patch_phase8.py
 """
 
@@ -20,7 +20,7 @@ API_PATH = os.path.abspath(
 )
 
 if not os.path.exists(API_PATH):
-    print(f"  ERROR: {API_PATH} not found. Run from ~/energia.")
+    print(f"  ERROR: {API_PATH} not found. Run from ~/hexagrid.")
     sys.exit(1)
 
 content = open(API_PATH).read()
@@ -180,7 +180,7 @@ print("    GET  /api/v1/carbon/pareto")
 print("    GET  /api/v1/carbon/recommend?cost_weight=0.5")
 print()
 print("  Before restarting, set your API key:")
-print("    echo 'ELECTRICITY_MAPS_API_KEY=your_key' >> ~/energia/.env")
+print("    echo 'ELECTRICITY_MAPS_API_KEY=your_key' >> ~/hexagrid/.env")
 print()
 print("  Then restart uvicorn:")
 print("    uvicorn api.api:app --reload --host 0.0.0.0 --port 8000")

@@ -1,16 +1,16 @@
 """
-Energia Phase 7 — RL Agent Inference Wrapper
+HexaGrid Phase 7 — RL Agent Inference Wrapper
 =============================================
 Loads a trained PPO model and exposes a clean recommend() interface
 for the FastAPI layer to call in real-time.
 
 Install into project:
-    cp rl_agent.py ~/energia/rl/agent.py
+    cp rl_agent.py ~/hexagrid/rl/agent.py
 
 Usage:
-    from rl.agent import EnergiaAgent
+    from rl.agent import HexaGridAgent
 
-    agent = EnergiaAgent()           # auto-loads best_model.zip
+    agent = HexaGridAgent()           # auto-loads best_model.zip
     rec   = agent.recommend({
         'current_price':  0.045,
         'price_forecast': [0.044, 0.041, 0.038, 0.036, ...],  # 12 values
@@ -61,7 +61,7 @@ UPS_DESC = {
 }
 
 
-class EnergiaAgent:
+class HexaGridAgent:
     """
     Wraps a trained Stable-Baselines3 PPO model for live inference.
 
@@ -143,7 +143,7 @@ class EnergiaAgent:
     ) -> np.ndarray:
         """
         Build the 26-dim observation vector from live API/dashboard data.
-        Matches EnergiaEnv._get_obs() exactly.
+        Matches HexaGridEnv._get_obs() exactly.
         """
         PRICE_MIN, PRICE_MAX = 0.005, 0.15
 

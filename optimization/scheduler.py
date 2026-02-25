@@ -1,5 +1,5 @@
 """
-Energia - Phase 3: Quantum-Assisted Workload Scheduler (QAOA)
+HexaGrid - Phase 3: Quantum-Assisted Workload Scheduler (QAOA)
 =============================================================
 Uses the Phase 2 LSTM forecasts to build a cost-optimization problem,
 then solves it with the Quantum Approximate Optimization Algorithm (QAOA)
@@ -102,7 +102,7 @@ def get_price_forecast(
     the analytic CAISO TOU model from Phase 1.
     """
     if use_lstm and models_dir:
-        lstm_path = os.path.join(models_dir, 'energia_lstm_best.h5')
+        lstm_path = os.path.join(models_dir, 'hexagrid_lstm_best.h5')
         if os.path.exists(lstm_path):
             try:
                 # Use the price series from the analytic model as proxy
@@ -581,7 +581,7 @@ def plot_schedules(
 
     fig = plt.figure(figsize=(20, 14), facecolor='#0d1117')
     fig.suptitle(
-        "ENERGIA — Phase 3: QAOA Workload Scheduler",
+        "HEXAGRID — Phase 3: QAOA Workload Scheduler",
         color='white', fontsize=14, fontweight='bold', y=0.98
     )
     gs = gridspec.GridSpec(3, 2, figure=fig, hspace=0.50, wspace=0.30)
@@ -718,7 +718,7 @@ def plot_schedules(
 
     os.makedirs(save_dir, exist_ok=True)
     ts        = datetime.now().strftime("%Y%m%d_%H%M%S")
-    save_path = os.path.join(save_dir, f"energia_scheduler_{ts}.png")
+    save_path = os.path.join(save_dir, f"hexagrid_scheduler_{ts}.png")
     plt.savefig(save_path, dpi=150, bbox_inches='tight',
                 facecolor='#0d1117', edgecolor='none')
     plt.close()
@@ -775,7 +775,7 @@ def run_scheduler_pipeline(
         jobs = default_jobs()
 
     print(f"\n{'='*60}")
-    print(f"  ENERGIA - Phase 3: QAOA Workload Scheduler")
+    print(f"  HEXAGRID - Phase 3: QAOA Workload Scheduler")
     print(f"{'='*60}")
     print(f"  Jobs to schedule : {len(jobs)}")
     print(f"  Scheduling window: {n_slots} minutes")
@@ -866,7 +866,7 @@ def run_scheduler_pipeline(
 # ══════════════════════════════════════════════════════════════════════════════
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Energia Phase 3 - QAOA Scheduler')
+    parser = argparse.ArgumentParser(description='HexaGrid Phase 3 - QAOA Scheduler')
     parser.add_argument('--slots',          type=int,  default=120,
                         help='Scheduling window in minutes (default: 120)')
     parser.add_argument('--p',              type=int,  default=2,

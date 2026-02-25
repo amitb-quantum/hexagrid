@@ -1,7 +1,7 @@
 """
-Energia - Phase 4: FastAPI Platform Layer
+HexaGrid - Phase 4: FastAPI Platform Layer
 ==========================================
-Wraps all three Energia engines into a REST API:
+Wraps all three HexaGrid engines into a REST API:
 
   POST /api/v1/simulate        → Digital Twin simulation
   POST /api/v1/forecast        → LSTM power demand forecast
@@ -54,7 +54,7 @@ def _load_engines():
     _twin_module       = sys.modules['simulation.digital_twin']
     _forecaster_module = sys.modules['intelligence.forecaster']
     _scheduler_module  = sys.modules['optimization.scheduler']
-    print("  ✓  All Energia engines loaded")
+    print("  ✓  All HexaGrid engines loaded")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -64,14 +64,14 @@ def _load_engines():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Load engines on startup, cleanup on shutdown."""
-    print("\n  ⚡ Energia API starting up...")
+    print("\n  ⚡ HexaGrid API starting up...")
     loop = asyncio.get_event_loop()
     await loop.run_in_executor(None, _load_engines)
     yield
-    print("  Energia API shutting down.")
+    print("  HexaGrid API shutting down.")
 
 app = FastAPI(
-    title       = "Energia API",
+    title       = "HexaGrid API",
     description = (
         "AI Data Center Energy Intelligence Platform\n\n"
         "Provides three core services:\n"
@@ -96,11 +96,11 @@ _DASHBOARD = os.path.join(os.path.dirname(__file__), '..', 'dashboard', 'index.h
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def serve_dashboard():
-    """Serve the Energia dashboard."""
+    """Serve the HexaGrid dashboard."""
     if not os.path.exists(_DASHBOARD):
         return HTMLResponse(
             content="<h2>Dashboard not found</h2>"
-                    "<p>Place <code>index.html</code> in <code>energia/dashboard/</code></p>"
+                    "<p>Place <code>index.html</code> in <code>hexagrid/dashboard/</code></p>"
                     "<p><a href='/docs'>API docs →</a></p>",
             status_code=404,
         )
@@ -155,7 +155,7 @@ class SimulateRequest(BaseModel):
                                       description="Sim duration in minutes (60-10080)")
     efficiency_profile: str   = Field("standard", pattern="^(standard|heron)$",
                                       description="'standard' or 'heron'")
-    facility_name:      str   = Field("Energia-DC-01",
+    facility_name:      str   = Field("HexaGrid-DC-01",
                                       description="Facility identifier")
     compare_profiles:   bool  = Field(False,
                                       description="Run both profiles and return delta")
@@ -320,7 +320,7 @@ def _run_forecast(run_id: str, req: ForecastRequest):
 
         result = {
             "model_path": os.path.join(
-                os.path.dirname(__file__), '..', 'models', 'energia_lstm_best.h5'
+                os.path.dirname(__file__), '..', 'models', 'hexagrid_lstm_best.h5'
             ),
             "horizons": {
                 f"+{h}min": {
@@ -688,8 +688,8 @@ def _get_rl_agent():
                 try:
                     _rl_sys_path = os.path.join(os.path.dirname(__file__), '..', 'rl')
                     sys.path.insert(0, _rl_sys_path)
-                    from rl_agent import EnergiaAgent
-                    _rl_agent = EnergiaAgent()
+                    from rl_agent import HexaGridAgent
+                    _rl_agent = HexaGridAgent()
                 except Exception as _e:
                     print(f"  [RL] Agent init failed: {_e}")
                     _rl_agent = None
@@ -1165,7 +1165,7 @@ async def hardware_alerts(limit: int = 50):
 
 if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser(description='Energia FastAPI Server')
+    parser = argparse.ArgumentParser(description='HexaGrid FastAPI Server')
     parser.add_argument('--host',   default='0.0.0.0')
     parser.add_argument('--port',   type=int, default=8000)
     parser.add_argument('--reload', action='store_true',
@@ -1174,7 +1174,7 @@ if __name__ == '__main__':
 
     print(f"""
   ╔══════════════════════════════════════════════╗
-  ║   ⚡  ENERGIA API  v0.1.0                    ║
+  ║   ⚡  HEXAGRID API  v0.1.0                    ║
   ║      http://{args.host}:{args.port}           ║
   ║      Swagger UI: /docs                       ║
   ║      ReDoc:      /redoc                      ║
@@ -1188,3 +1188,9 @@ if __name__ == '__main__':
         workers   = 1,
         log_level = "info",
     )
+from patch_api_savings import router as savings_router
+app.include_router(savings_router)
+from patch_api_alerts import router as alerts_router
+app.include_router(alerts_router)
+from patch_api_weather import router as weather_router
+app.include_router(weather_router)

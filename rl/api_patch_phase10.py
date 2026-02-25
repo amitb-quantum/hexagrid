@@ -1,5 +1,5 @@
 """
-Energia Phase 10 — API Patch
+HexaGrid Phase 10 — API Patch
 =============================
 Adds GPU health monitoring endpoints to api/api.py.
 
@@ -8,7 +8,7 @@ New endpoints:
   GET  /api/v1/hardware/history/{gpu_idx} → rolling telemetry history
   GET  /api/v1/hardware/alerts            → recent alert log
 
-Run from ~/energia:
+Run from ~/hexagrid:
     pip install pynvml --break-system-packages   # first time only
     python rl/api_patch_phase10.py
 """
@@ -20,7 +20,7 @@ API_PATH = os.path.abspath(
 )
 
 if not os.path.exists(API_PATH):
-    print(f"  ERROR: {API_PATH} not found. Run from ~/energia.")
+    print(f"  ERROR: {API_PATH} not found. Run from ~/hexagrid.")
     sys.exit(1)
 
 content = open(API_PATH).read()

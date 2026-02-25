@@ -1,5 +1,5 @@
 """
-Energia Phase 8 — Carbon Intensity Connector
+HexaGrid Phase 8 — Carbon Intensity Connector
 =============================================
 Pulls real-time carbon intensity (gCO2eq/kWh) and fuel mix from
 Electricity Maps API v3 for the same ISO regions as grid_connector.py.
@@ -12,7 +12,7 @@ Features:
   - SQLite cache (15-min TTL) for fault tolerance
   - .env support — API key never hardcoded
 
-Zones mapped to Energia ISOs:
+Zones mapped to HexaGrid ISOs:
   CAISO  → US-CAL-CISO
   ERCOT  → US-TEX-ERCO
   NYISO  → US-NY-NYIS
@@ -87,7 +87,7 @@ class CarbonConnector:
         if not API_KEY:
             logger.warning(
                 "ELECTRICITY_MAPS_API_KEY not set. "
-                "Add it to ~/energia/.env: ELECTRICITY_MAPS_API_KEY=your_key"
+                "Add it to ~/hexagrid/.env: ELECTRICITY_MAPS_API_KEY=your_key"
             )
 
     # ── Cache ─────────────────────────────────────────────────────────────────
