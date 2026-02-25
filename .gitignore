@@ -1,4 +1,4 @@
-# Python / Virtual Environment
+# Python / Environment
 __pycache__/
 *.py[cod]
 *$py.class
@@ -9,6 +9,10 @@ lib64/
 share/
 pyvenv.cfg
 hexagrid/
+
+# Databases
+*.db
+*.sqlite3
 
 # Jupyter Notebooks
 .ipynb_checkpoints/
