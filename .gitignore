@@ -29,3 +29,4 @@ hexagrid/
 .DS_Store
 Thumbs.db
 .env
+*.pid
