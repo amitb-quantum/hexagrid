@@ -509,39 +509,17 @@ def _get_gpu_info() -> dict:
 async def price_feed(
     horizon_min: int = Query(120, ge=1, le=1440,
                              description="How many minutes ahead to forecast"),
+    iso:         str = Query("CAISO",
+                             description="Grid region: CAISO|ERCOT|PJM|NYISO|ISONE|MISO"),
     start_tick:  int = Query(0,   ge=0, le=1440),
 ):
     """
     Current grid price + forward price curve for the next N minutes.
-    Based on CAISO TOU model (production: swap for live grid API).
+    Pulls real-time demand data from EIA v2 API and shapes into a price curve.
+    Falls back to synthetic CAISO TOU model if EIA is unreachable.
     """
-    from simulation.digital_twin import grid_price_usd_kwh
-    import math
-
-    now_tick = int(time.time() // 60) % 1440   # current minute of day
-    prices   = [
-        {
-            "minute_offset": i,
-            "price_usd_kwh": round(grid_price_usd_kwh(now_tick + start_tick + i), 5),
-        }
-        for i in range(horizon_min)
-    ]
-
-    current_price = prices[0]["price_usd_kwh"]
-    min_price     = min(p["price_usd_kwh"] for p in prices)
-    max_price     = max(p["price_usd_kwh"] for p in prices)
-    cheapest_slot = min(prices, key=lambda x: x["price_usd_kwh"])
-
-    return {
-        "current_price_usd_kwh": current_price,
-        "horizon_minutes":       horizon_min,
-        "min_price":             min_price,
-        "max_price":             max_price,
-        "cheapest_slot":         cheapest_slot,
-        "price_curve":           prices,
-        "source":                "CAISO-TOU-synthetic",
-        "timestamp":             datetime.utcnow().isoformat(),
-    }
+    from grid_prices import get_price_curve
+    return get_price_curve(iso=iso, horizon_min=horizon_min)
 
 
 # ── Simulate ──────────────────────────────────────────────────────────────────

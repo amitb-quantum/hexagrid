@@ -734,6 +734,21 @@
 .bm-status-badge.running{background:rgba(255,170,0,0.15);color:var(--amber);}
 .bm-status-badge.done{background:rgba(0,200,120,0.12);color:var(--green);}
 
+  /* ── Live GPU Telemetry ─────────────────────────────────────────── */
+  .tview-btn { background:var(--surface2);border:1px solid var(--border);color:var(--muted);
+    border-radius:6px;padding:3px 12px;font-size:12px;cursor:pointer;transition:all 0.2s; }
+  .tview-btn:hover { border-color:var(--cyan);color:var(--cyan); }
+  .tview-btn.tview-active { background:rgba(0,212,255,0.12);border-color:var(--cyan);
+    color:var(--cyan);font-weight:600; }
+  .node-card { background:var(--surface);border:1px solid var(--border);
+    border-radius:10px;padding:14px;transition:all 0.2s; }
+  .node-card:hover { transform:translateY(-2px); }
+  .node-card.healthy  { border-color:rgba(0,255,136,0.25); }
+  .node-card.degraded { border-color:rgba(255,140,0,0.35); }
+  .node-card.stale    { border-color:rgba(136,136,136,0.35);opacity:0.7; }
+  .node-card.ecc_alert,.node-card.thermal {
+    border-color:rgba(255,68,68,0.45);background:rgba(255,68,68,0.03); }
+
 </style>
 </head>
 <body>
@@ -1385,7 +1400,93 @@
 <div class="page-inner">
 <div class="grid">
 
-  <!-- Fleet KPI Bar -->
+  <!-- ══ LIVE GPU TELEMETRY ═══════════════════════════════════════════ -->
+  <!-- Cluster selector + view toggle -->
+  <div class="col-12" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:4px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Cluster</span>
+      <input id="telem-cluster-id" value="local-dev"
+             style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;
+                    padding:4px 10px;font-size:13px;color:var(--text);width:160px"
+             onchange="loadTelemetry()">
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">View</span>
+      <button id="tview-physical" class="tview-btn tview-active" onclick="setTelemView('physical')">Physical GPUs</button>
+      <button id="tview-mig"      class="tview-btn"              onclick="setTelemView('mig')">MIG Instances</button>
+      <button id="tview-auto"     class="tview-btn"              onclick="setTelemView('auto')">Auto</button>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+      <span id="telem-age-badge" style="font-size:11px;padding:3px 10px;border-radius:12px;
+            background:rgba(0,255,136,0.1);color:var(--green);border:1px solid rgba(0,255,136,0.2)">
+        &#9679; loading
+      </span>
+      <button class="btn-secondary" onclick="loadTelemetry()" style="padding:4px 12px;font-size:12px">
+        <i class="fa-solid fa-rotate"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Live KPI strip -->
+  <div class="card col-3">
+    <div class="card-title"><i class="fa-solid fa-server"></i>Nodes Online</div>
+    <div class="kpi-value cyan" id="telem-kpi-nodes">--</div>
+    <div class="kpi-delta neu" id="telem-kpi-nodes-sub">loading...</div>
+  </div>
+  <div class="card col-3">
+    <div class="card-title"><i class="fa-solid fa-microchip"></i>Effective GPUs</div>
+    <div class="kpi-value" id="telem-kpi-gpus" style="color:var(--purple)">--</div>
+    <div class="kpi-delta neu" id="telem-kpi-gpus-sub">loading...</div>
+  </div>
+  <div class="card col-3">
+    <div class="card-title"><i class="fa-solid fa-bolt"></i>Fleet Power Draw</div>
+    <div class="kpi-value" id="telem-kpi-power" style="color:var(--orange)">--</div>
+    <div class="kpi-delta neu" id="telem-kpi-power-sub">loading...</div>
+  </div>
+  <div class="card col-3">
+    <div class="card-title"><i class="fa-solid fa-gauge-high"></i>Avg Utilisation</div>
+    <div class="kpi-value green" id="telem-kpi-util">--</div>
+    <div class="kpi-delta neu" id="telem-kpi-util-sub">loading...</div>
+  </div>
+
+  <!-- Node health grid -->
+  <div class="card col-12">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="card-title" style="margin-bottom:0">
+        <i class="fa-solid fa-chart-network"></i>Node Health Grid
+        <span style="font-size:11px;font-weight:400;color:var(--muted);margin-left:8px">
+          one card per GPU node &middot; worst-case heartbeat
+        </span>
+      </div>
+      <div style="display:flex;gap:12px;font-size:11px;color:var(--muted)">
+        <span><span style="color:var(--green)">&#9679;</span> healthy</span>
+        <span><span style="color:var(--orange)">&#9679;</span> degraded</span>
+        <span><span style="color:var(--muted)">&#9679;</span> stale</span>
+        <span><span style="color:var(--red)">&#9679;</span> ecc / thermal</span>
+      </div>
+    </div>
+    <div id="telem-node-grid"
+         style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
+      <div style="color:var(--muted);font-size:13px;padding:20px 0;grid-column:span 6">
+        <i class="fa-solid fa-satellite-dish" style="margin-right:8px"></i>
+        Waiting for telemetry &mdash; start collector_agent.py and ensure CLUSTER_ID matches above.
+      </div>
+    </div>
+  </div>
+
+  <!-- Hardware alert strip (hidden when all healthy) -->
+  <div class="card col-12" id="telem-alert-strip"
+       style="display:none;border-color:rgba(255,68,68,0.4);background:rgba(255,68,68,0.04)">
+    <div class="card-title" style="color:var(--red)">
+      <i class="fa-solid fa-triangle-exclamation"></i>Hardware Alerts
+    </div>
+    <div id="telem-alert-list"></div>
+  </div>
+
+  <div class="col-12" style="border-bottom:1px solid var(--border);margin:8px 0 20px"></div>
+  <!-- ══ END LIVE GPU TELEMETRY ════════════════════════════════════════ -->
+
+    <!-- Fleet KPI Bar -->
   <div class="card col-3">
     <div class="card-title"><i class="fa-solid fa-server"></i>Total Sites</div>
     <div class="kpi-value cyan" id="fleet-kpi-sites">—</div>
@@ -2716,6 +2817,8 @@ switchTab = function(name, btn) {
   }
   if (name === 'fleet') {
     loadFleet();
+  } else {
+    if (telemTimer) { clearInterval(telemTimer); telemTimer = null; }
   }
   if (name === 'hardware') {
     loadHardware();
@@ -3620,7 +3723,199 @@ function renderCarbonRecommendationFromPareto(d, costW) { /* handled via loadCar
 // ═══════════════════════════════════════════════════════
 let fleetScoresChart = null;
 
+
+// ── Live GPU Telemetry ────────────────────────────────────────────────────
+let telemView  = 'physical';
+let telemTimer = null;
+
+function setTelemView(v) {
+  telemView = v;
+  document.querySelectorAll('.tview-btn').forEach(b => b.classList.remove('tview-active'));
+  document.getElementById('tview-' + v).classList.add('tview-active');
+  loadTelemetry();
+}
+
+function telemClusterId() {
+  return (document.getElementById('telem-cluster-id').value || 'local-dev').trim();
+}
+
+async function loadTelemetry() {
+  const cid = telemClusterId();
+  try {
+    const [fleetNow, nodes] = await Promise.all([
+      apiFetch('/telemetry/fleet/now?cluster_id='  + encodeURIComponent(cid) + '&view=' + telemView),
+      apiFetch('/telemetry/fleet/nodes?cluster_id=' + encodeURIComponent(cid)),
+    ]);
+    renderTelemKPIs(fleetNow);
+    renderNodeGrid(nodes, cid);
+    renderTelemAlerts(nodes);
+  } catch(e) {
+    document.getElementById('telem-node-grid').innerHTML =
+      '<div style="color:var(--red);font-size:13px;grid-column:span 6">' +
+      '<i class="fa-solid fa-triangle-exclamation" style="margin-right:8px"></i>' +
+      'Telemetry unavailable: ' + e.message + '</div>';
+  }
+}
+
+function renderTelemKPIs(d) {
+  const age   = d.data_age_s;
+  const badge = document.getElementById('telem-age-badge');
+  if (d.stale || age === null) {
+    badge.setAttribute('style',
+      'font-size:11px;padding:3px 10px;border-radius:12px;' +
+      'background:rgba(255,68,68,0.1);color:#ff4444;border:1px solid rgba(255,68,68,0.3)');
+    badge.textContent = 'stale' + (age != null ? ' ' + Math.round(age) + 's' : '');
+  } else {
+    const live = age < 15;
+    badge.setAttribute('style',
+      'font-size:11px;padding:3px 10px;border-radius:12px;' +
+      (live
+        ? 'background:rgba(0,255,136,0.1);color:var(--green);border:1px solid rgba(0,255,136,0.2)'
+        : 'background:rgba(255,140,0,0.1);color:var(--orange);border:1px solid rgba(255,140,0,0.2)'));
+    badge.textContent = age < 2 ? 'live' : Math.round(age) + 's ago';
+  }
+
+  const nc = d.total_nodes || 0;
+  document.getElementById('telem-kpi-nodes').textContent     = nc;
+  document.getElementById('telem-kpi-nodes-sub').textContent = nc + (nc === 1 ? ' node pushing' : ' nodes pushing');
+
+  const eff = d.effective_gpu_count || d.total_gpus || 0;
+  const mig = d.total_mig_instances || 0;
+  document.getElementById('telem-kpi-gpus').textContent     = eff;
+  document.getElementById('telem-kpi-gpus-sub').textContent =
+    mig > 0
+      ? (d.total_gpus || 0) + ' physical / ' + mig + ' MIG'
+      : (d.total_gpus || 0) + ' physical';
+
+  const pw = d.total_power_w;
+  document.getElementById('telem-kpi-power').textContent    = pw != null ? fmt(pw,1) + ' W' : '--';
+  const cap = d.power_capped_count || 0;
+  document.getElementById('telem-kpi-power-sub').textContent =
+    cap > 0 ? cap + ' GPU' + (cap > 1 ? 's' : '') + ' power-capped' : 'within limits';
+  document.getElementById('telem-kpi-power-sub').className  =
+    cap > 0 ? 'kpi-delta warn' : 'kpi-delta neu';
+
+  const util = d.avg_util_pct;
+  document.getElementById('telem-kpi-util').textContent     = util != null ? fmt(util,1) + '%' : '--';
+  const ecc = d.ecc_alert_count || 0;
+  document.getElementById('telem-kpi-util-sub').textContent =
+    ecc > 0 ? ecc + ' ECC error' + (ecc > 1 ? 's' : '') : 'no hardware alerts';
+  document.getElementById('telem-kpi-util-sub').className   =
+    ecc > 0 ? 'kpi-delta warn' : 'kpi-delta pos';
+}
+
+function renderNodeGrid(nodes, cid) {
+  const grid = document.getElementById('telem-node-grid');
+  if (!nodes || nodes.length === 0) {
+    grid.innerHTML =
+      '<div style="color:var(--muted);font-size:13px;padding:20px 0;grid-column:span 6">' +
+      '<i class="fa-solid fa-satellite-dish" style="margin-right:8px"></i>' +
+      'No nodes found for cluster <strong>' + cid + '</strong> &mdash; ' +
+      'check CLUSTER_ID and confirm a push has been received.</div>';
+    return;
+  }
+
+  const SC = {
+    healthy:   'var(--green)',  degraded: 'var(--orange)',
+    stale:     'var(--muted)',  thermal:  'var(--red)',  ecc_alert: 'var(--red)'
+  };
+  const SI = {
+    healthy:   'fa-circle-check', degraded: 'fa-triangle-exclamation',
+    stale:     'fa-circle-pause', thermal:  'fa-fire',   ecc_alert: 'fa-radiation'
+  };
+
+  grid.innerHTML = nodes.map(n => {
+    const sc  = SC[n.status] || 'var(--muted)';
+    const si  = SI[n.status] || 'fa-circle';
+    const age = n.data_age_s != null
+      ? (n.data_age_s < 2 ? 'live' : Math.round(n.data_age_s) + 's ago')
+      : 'no data';
+    const pw  = n.node_power_w  != null ? fmt(n.node_power_w, 1) + ' W'      : '--';
+    const ut  = n.avg_util_pct  != null ? fmt(n.avg_util_pct, 1) + '%'       : '--';
+    const tmp = n.max_temp_c    != null ? fmt(n.max_temp_c,   1) + '&deg;C'  : '--';
+    const tc  = n.max_temp_c > 85 ? 'var(--red)'
+              : n.max_temp_c > 70 ? 'var(--orange)' : 'var(--cyan)';
+    const gpuLine = n.mig_instance_count > 0
+      ? n.gpu_count + ' GPU &middot; ' + n.mig_instance_count + ' MIG'
+      : n.gpu_count + ' GPU' + (n.gpu_count !== 1 ? 's' : '');
+
+    const eccB = n.ecc_alerts > 0
+      ? '<span style="background:rgba(255,68,68,0.15);color:var(--red);font-size:10px;' +
+        'padding:1px 7px;border-radius:8px;font-weight:700">ECC ' + n.ecc_alerts + '</span>' : '';
+    const thrB = n.hw_thermal_gpus > 0
+      ? '<span style="background:rgba(255,68,68,0.15);color:var(--red);font-size:10px;' +
+        'padding:1px 7px;border-radius:8px;font-weight:700">THERMAL</span>' : '';
+    const capB = n.power_capped_gpus > 0
+      ? '<span style="background:rgba(255,140,0,0.15);color:var(--orange);font-size:10px;' +
+        'padding:1px 7px;border-radius:8px;font-weight:700">PWR CAP</span>' : '';
+
+    return (
+      '<div class="node-card ' + n.status + '">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">' +
+          '<div>' +
+            '<div style="font-size:13px;font-weight:700;color:var(--text)">' + n.node_id + '</div>' +
+            '<div style="font-size:10px;color:var(--muted);margin-top:1px">' + n.rack_id + ' &middot; ' + gpuLine + '</div>' +
+          '</div>' +
+          '<div style="text-align:right">' +
+            '<span style="color:' + sc + ';font-size:11px;font-weight:700">' +
+              '<i class="fa-solid ' + si + '" style="margin-right:3px"></i>' + n.status +
+            '</span>' +
+            '<div style="font-size:10px;color:var(--muted);margin-top:2px">' + age + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">' +
+          '<div style="background:var(--surface2);border-radius:6px;padding:6px;text-align:center">' +
+            '<div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Power</div>' +
+            '<div style="font-size:14px;font-weight:700;color:var(--orange);font-family:var(--mono)">' + pw + '</div>' +
+          '</div>' +
+          '<div style="background:var(--surface2);border-radius:6px;padding:6px;text-align:center">' +
+            '<div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Util</div>' +
+            '<div style="font-size:14px;font-weight:700;color:var(--green);font-family:var(--mono)">' + ut + '</div>' +
+          '</div>' +
+          '<div style="background:var(--surface2);border-radius:6px;padding:6px;text-align:center">' +
+            '<div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Temp</div>' +
+            '<div style="font-size:14px;font-weight:700;font-family:var(--mono);color:' + tc + '">' + tmp + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:4px;flex-wrap:wrap">' + eccB + thrB + capB + '</div>' +
+      '</div>'
+    );
+  }).join('');
+}
+
+function renderTelemAlerts(nodes) {
+  const strip = document.getElementById('telem-alert-strip');
+  const list  = document.getElementById('telem-alert-list');
+  const bad   = (nodes || []).filter(n => n.ecc_alerts > 0 || n.hw_thermal_gpus > 0 || n.stale);
+  if (!bad.length) { strip.style.display = 'none'; return; }
+  strip.style.display = '';
+  list.innerHTML = bad.map(n => {
+    const msgs = [];
+    if (n.ecc_alerts > 0)
+      msgs.push('<span style="color:var(--red)">ECC double-bit errors on ' +
+        n.ecc_alerts + ' GPU' + (n.ecc_alerts > 1 ? 's' : '') +
+        ' &mdash; schedule for replacement</span>');
+    if (n.hw_thermal_gpus > 0)
+      msgs.push('<span style="color:var(--red)">Hardware thermal throttle on ' +
+        n.hw_thermal_gpus + ' GPU' + (n.hw_thermal_gpus > 1 ? 's' : '') + '</span>');
+    if (n.stale)
+      msgs.push('<span style="color:var(--muted)">Agent not responding (last seen ' +
+        Math.round(n.data_age_s) + 's ago)</span>');
+    return (
+      '<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px">' +
+        '<strong style="color:var(--text)">' + n.node_id + '</strong>' +
+        '<span style="color:var(--muted);font-size:11px;margin:0 8px">' + n.rack_id + '</span>' +
+        msgs.join(' &middot; ') +
+      '</div>'
+    );
+  }).join('');
+}
+
 async function loadFleet() {
+  loadTelemetry();
+  if (telemTimer) clearInterval(telemTimer);
+  telemTimer = setInterval(loadTelemetry, 10000);
+
   await Promise.all([
     loadFleetSummary(),
     loadFleetHistory(),
