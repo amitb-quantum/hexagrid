@@ -1,0 +1,178 @@
+---
+# hexagrid_deploy.yml
+# Deploy HexaGrid collector agent to all GPU nodes in the fleet.
+#
+# Usage:
+#   ansible-playbook hexagrid_deploy.yml \
+#     -i inventory/gpu_nodes.yml \
+#     --extra-vars "cluster_id=coreweave-nyc hexagrid_endpoint=http://10.0.1.5:8000/api/v1/telemetry/gpu"
+#
+# Inventory group "gpu_nodes" should define rack_id per host:
+#   gpu-node-01:
+#     ansible_host: 10.0.2.11
+#     rack_id: rack-01
+#   gpu-node-02:
+#     ansible_host: 10.0.2.12
+#     rack_id: rack-01
+#
+# For pilot deployments (1-2 racks), run directly:
+#   ansible gpu_nodes -m ping                              # verify connectivity
+#   ansible-playbook hexagrid_deploy.yml -l rack-01       # deploy to one rack first
+
+- name: Deploy HexaGrid GPU Collector Agent
+  hosts: gpu_nodes
+  become: true
+  vars:
+    hexagrid_version:   "1.0.0"
+    install_dir:        "/opt/hexagrid"
+    data_dir:           "/var/lib/hexagrid"
+    hexagrid_user:      "hexagrid"
+    poll_interval:      10
+    collect_mig_mode:   "auto"         # auto | physical | mig
+    log_level:          "INFO"
+    # Set these via --extra-vars or group_vars:
+    hexagrid_endpoint:  "http://hexagrid-control-plane:8000/api/v1/telemetry/gpu"
+    hexagrid_token:     ""             # bearer token — use vault in production
+    cluster_id:         "default"
+
+  tasks:
+
+    # ── 1. Create service user ─────────────────────────────────────────────
+    - name: Create hexagrid system user
+      ansible.builtin.user:
+        name:    "{{ hexagrid_user }}"
+        system:  true
+        shell:   /sbin/nologin
+        groups:  "video,render"
+        append:  true
+        home:    "{{ data_dir }}"
+        create_home: false
+
+    # ── 2. Create directories ──────────────────────────────────────────────
+    - name: Create install and data directories
+      ansible.builtin.file:
+        path:  "{{ item }}"
+        state: directory
+        owner: "{{ hexagrid_user }}"
+        mode:  "0755"
+      loop:
+        - "{{ install_dir }}"
+        - "{{ data_dir }}"
+        - /etc/hexagrid
+
+    # ── 3. Install Python dependencies ────────────────────────────────────
+    - name: Install pynvml and requests
+      ansible.builtin.pip:
+        name:
+          - nvidia-ml-py3>=7.352.0
+          - requests>=2.28.0
+        executable: pip3
+        state: present
+
+    # ── 4. Deploy collector agent script ──────────────────────────────────
+    - name: Copy collector agent
+      ansible.builtin.copy:
+        src:   collector_agent.py
+        dest:  "{{ install_dir }}/collector_agent.py"
+        owner: "{{ hexagrid_user }}"
+        mode:  "0750"
+      notify: Restart hexagrid agent
+
+    # ── 5. Write secrets env file (token, endpoint) ───────────────────────
+    - name: Write agent secrets env file
+      ansible.builtin.template:
+        src:   agent.env.j2
+        dest:  /etc/hexagrid/agent.env
+        owner: "{{ hexagrid_user }}"
+        mode:  "0600"     # secrets — not world-readable
+      notify: Restart hexagrid agent
+      # agent.env.j2 contains:
+      # HEXAGRID_TOKEN={{ hexagrid_token }}
+      # HEXAGRID_ENDPOINT={{ hexagrid_endpoint }}
+
+    # ── 6. Write systemd unit (with per-node rack_id) ─────────────────────
+    - name: Install systemd service unit
+      ansible.builtin.template:
+        src:   hexagrid-agent.service.j2
+        dest:  /etc/systemd/system/hexagrid-agent.service
+        mode:  "0644"
+      notify:
+        - Reload systemd
+        - Restart hexagrid agent
+      vars:
+        # rack_id comes from inventory host_vars — allows per-rack configuration
+        node_rack_id: "{{ rack_id | default('unknown') }}"
+
+    # ── 7. Enable and start ────────────────────────────────────────────────
+    - name: Enable and start hexagrid agent
+      ansible.builtin.systemd:
+        name:    hexagrid-agent
+        enabled: true
+        state:   started
+        daemon_reload: true
+
+    # ── 8. Verify agent is pushing telemetry ──────────────────────────────
+    - name: Wait for agent to complete first push
+      ansible.builtin.pause:
+        seconds: 15
+
+    - name: Check agent status
+      ansible.builtin.command: systemctl status hexagrid-agent --no-pager
+      register: agent_status
+      changed_when: false
+
+    - name: Verify agent is active
+      ansible.builtin.assert:
+        that: "'active (running)' in agent_status.stdout"
+        fail_msg: "hexagrid-agent service is not running on {{ inventory_hostname }}"
+        success_msg: "Agent running on {{ inventory_hostname }} ({{ rack_id | default('?') }})"
+
+    # ── 9. Run test collection and show output ────────────────────────────
+    - name: Run test collection (shows GPU/MIG state)
+      ansible.builtin.command: >
+        python3 {{ install_dir }}/collector_agent.py
+        --test
+        --mig-mode {{ collect_mig_mode }}
+      register: test_output
+      changed_when: false
+      become_user: "{{ hexagrid_user }}"
+
+    - name: Print GPU collection summary
+      ansible.builtin.debug:
+        msg: "{{ test_output.stdout_lines }}"
+
+  handlers:
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Restart hexagrid agent
+      ansible.builtin.systemd:
+        name:  hexagrid-agent
+        state: restarted
+
+
+# ── Rolling update playbook (upgrade in place without full fleet restart) ──
+- name: Rolling update — upgrade collector script only
+  hosts: gpu_nodes
+  become: true
+  serial: "20%"    # update 20% of nodes at a time
+  vars:
+    install_dir: "/opt/hexagrid"
+
+  tasks:
+    - name: Copy updated collector agent
+      ansible.builtin.copy:
+        src:   collector_agent.py
+        dest:  "{{ install_dir }}/collector_agent.py"
+        owner: hexagrid
+        mode:  "0750"
+
+    - name: Restart agent on this batch
+      ansible.builtin.systemd:
+        name:  hexagrid-agent
+        state: restarted
+
+    - name: Pause between batches to verify stability
+      ansible.builtin.pause:
+        seconds: 30

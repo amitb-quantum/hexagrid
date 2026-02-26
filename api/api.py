@@ -54,6 +54,7 @@ def _load_engines():
     _twin_module       = sys.modules['simulation.digital_twin']
     _forecaster_module = sys.modules['intelligence.forecaster']
     _scheduler_module  = sys.modules['optimization.scheduler']
+    init_telemetry_db()
     print("  ✓  All HexaGrid engines loaded")
 
 
@@ -83,6 +84,16 @@ app = FastAPI(
     version     = "0.1.0",
     lifespan    = lifespan,
 )
+
+@app.get("/health", tags=["system"])
+def health():
+    import time
+    return {
+        "status":   "ok",
+        "platform": "HexaGrid",
+        "version":  "0.1.0",
+        "ts":       time.time(),
+    }
 
 app.add_middleware(
     CORSMiddleware,
@@ -1194,3 +1205,7 @@ from patch_api_alerts import router as alerts_router
 app.include_router(alerts_router)
 from patch_api_weather import router as weather_router
 app.include_router(weather_router)
+from patch_api_benchmark import router as benchmark_router
+app.include_router(benchmark_router)
+from telemetry_receiver import router as telemetry_router, init_telemetry_db
+app.include_router(telemetry_router)

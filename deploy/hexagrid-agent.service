@@ -1,0 +1,55 @@
+[Unit]
+Description=HexaGrid GPU Telemetry Collector Agent
+Documentation=https://hexagrid.ai/docs/collector
+After=network-online.target nvidia-persistenced.service
+Wants=network-online.target
+# Restart if the NVIDIA driver reloads — agent handles it gracefully
+PartOf=nvidia-persistenced.service
+
+[Service]
+Type=simple
+User=hexagrid
+Group=hexagrid
+
+# ── Identity (set per-node in deployment) ──────────────────────────────────
+Environment=CLUSTER_ID=default
+Environment=RACK_ID=rack-01
+# NODE_ID defaults to hostname — only override if hostname is not unique
+
+# ── Control plane endpoint ─────────────────────────────────────────────────
+Environment=HEXAGRID_ENDPOINT=http://hexagrid-control-plane:8000/api/v1/telemetry/gpu
+EnvironmentFile=-/etc/hexagrid/agent.env    # optional secrets file (token etc.)
+
+# ── Collection config ──────────────────────────────────────────────────────
+Environment=POLL_INTERVAL_S=10
+Environment=COLLECT_MIG_MODE=auto
+Environment=LOG_LEVEL=INFO
+
+# ── Local SQLite fallback (survives control plane restarts) ───────────────
+Environment=SQLITE_FALLBACK=/var/lib/hexagrid/fallback.db
+
+ExecStart=/usr/bin/python3 /opt/hexagrid/collector_agent.py
+ExecStartPre=/usr/bin/mkdir -p /var/lib/hexagrid
+
+Restart=always
+RestartSec=10
+StartLimitIntervalSec=120
+StartLimitBurst=5
+
+# ── Resource limits ────────────────────────────────────────────────────────
+# Agent is lightweight — cap it so it cannot compete with GPU workloads
+CPUQuota=5%
+MemoryMax=128M
+Nice=10
+
+# ── Security hardening ────────────────────────────────────────────────────
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/hexagrid
+PrivateTmp=true
+NoNewPrivileges=true
+# Must be able to open NVML device files
+SupplementaryGroups=video render
+
+[Install]
+WantedBy=multi-user.target
