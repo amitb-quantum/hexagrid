@@ -30,3 +30,5 @@ hexagrid/
 Thumbs.db
 .env
 *.pid
+.env*
+*.bak*
