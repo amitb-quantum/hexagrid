@@ -31,12 +31,19 @@ os.environ['TF_CPP_MIN_LOG_LEVEL']    = '3'
 os.environ['TF_ENABLE_ONEDNN_OPTS']   = '0'
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Query
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Query, Depends
 from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import uvicorn
+
+# ── Auth layer ────────────────────────────────────────────────────────────
+import sys as _sys_auth
+_sys_auth.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from auth.rbac import get_current_user, require_role, apply_security_to_openapi
+from auth.users import bootstrap_superadmin
+from auth.api_keys import bootstrap_collector_key
 
 # ── Lazy imports for heavy engines (loaded once at startup) ────────────────────
 _twin_module        = None
@@ -68,6 +75,9 @@ async def lifespan(app: FastAPI):
     print("\n  ⚡ HexaGrid API starting up...")
     loop = asyncio.get_event_loop()
     await loop.run_in_executor(None, _load_engines)
+    # Bootstrap initial superadmin + collector key on first run
+    bootstrap_superadmin()
+    bootstrap_collector_key()
     yield
     print("  HexaGrid API shutting down.")
 
@@ -95,11 +105,19 @@ def health():
         "ts":       time.time(),
     }
 
+import json as _json_cors
+_ALLOWED_ORIGINS = _json_cors.loads(
+    os.environ.get(
+        "HEXAGRID_CORS_ORIGINS",
+        '["http://localhost:8000","http://localhost:3000"]'
+    )
+)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins  = ["*"],
-    allow_methods  = ["*"],
-    allow_headers  = ["*"],
+    allow_origins     = _ALLOWED_ORIGINS,
+    allow_methods     = ["GET","POST","PUT","DELETE","OPTIONS"],
+    allow_headers     = ["Authorization","Content-Type","X-API-Key"],
+    allow_credentials = True,
 )
 
 # ── Dashboard: serve index.html at GET / ──────────────────────────────────────
@@ -116,6 +134,12 @@ async def serve_dashboard():
             status_code=404,
         )
     return HTMLResponse(content=open(_DASHBOARD).read())
+
+@app.get("/login", response_class=HTMLResponse, include_in_schema=False)
+async def serve_login():
+    """Serve the HexaGrid login page."""
+    from auth_routes import _LOGIN_PAGE
+    return HTMLResponse(content=_LOGIN_PAGE)
 
 # ── In-memory job store (replace with Redis in production) ────────────────────
 _jobs: dict[str, dict] = {}       # run_id -> {status, result, error, created_at}
@@ -524,7 +548,8 @@ async def price_feed(
 
 # ── Simulate ──────────────────────────────────────────────────────────────────
 @app.post("/api/v1/simulate", tags=["Digital Twin"], status_code=202)
-async def simulate(req: SimulateRequest, background_tasks: BackgroundTasks):
+async def simulate(req: SimulateRequest, background_tasks: BackgroundTasks,
+                   _user=Depends(require_role("operator"))):
     """
     Launch an async Digital Twin simulation.
     Returns run_id immediately; poll /api/v1/jobs/{run_id} for results.
@@ -561,7 +586,8 @@ async def forecast(req: ForecastRequest, background_tasks: BackgroundTasks):
 
 # ── Schedule ──────────────────────────────────────────────────────────────────
 @app.post("/api/v1/schedule", tags=["Scheduler"], status_code=202)
-async def schedule(req: ScheduleRequest, background_tasks: BackgroundTasks):
+async def schedule(req: ScheduleRequest, background_tasks: BackgroundTasks,
+                   _user=Depends(require_role("operator"))):
     """
     Launch QAOA or Greedy job scheduler.
     QAOA (classical_only=false) takes ~30-120s. Greedy is instant.
@@ -718,7 +744,8 @@ async def rl_status():
 
 
 @app.post("/api/v1/rl/train", tags=["Phase 7 — RL Agent"])
-async def rl_train(req: RLTrainRequest, background_tasks: BackgroundTasks):
+async def rl_train(req: RLTrainRequest, background_tasks: BackgroundTasks,
+                   _user=Depends(require_role("scheduler_admin"))):
     """
     Launch a background PPO training job.
     Returns run_id immediately — poll GET /api/v1/jobs/{run_id} for status.
@@ -1187,3 +1214,7 @@ from patch_api_benchmark import router as benchmark_router
 app.include_router(benchmark_router)
 from telemetry_receiver import router as telemetry_router, init_telemetry_db
 app.include_router(telemetry_router)
+from auth_routes import router as auth_router
+app.include_router(auth_router)
+apply_security_to_openapi(app)
+

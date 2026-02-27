@@ -725,8 +725,8 @@ def _check_local_alerts(payload: dict) -> List[str]:
 
 def _build_headers() -> dict:
     return {
-        "Authorization": f"Bearer {AUTH_TOKEN}",
-        "Content-Type":  "application/json",
+        "X-API-Key":       AUTH_TOKEN,
+        "Content-Type":    "application/json",
         "X-HexaGrid-Node": NODE_ID,
         "X-HexaGrid-Cluster": CLUSTER_ID,
     }

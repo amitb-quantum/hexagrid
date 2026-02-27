@@ -102,6 +102,17 @@ cmd_start() {
     INFO "Log:     $LOG_FILE"
     echo ""
 
+    # ── Source auth environment variables ─────────────────────────────────────
+    local env_auth="$HOME/hexagrid/.env.auth"
+    if [[ -f "$env_auth" ]]; then
+        # shellcheck source=/dev/null
+        source "$env_auth"
+        INFO "Auth env: $env_auth"
+    else
+        WARN ".env.auth not found at $env_auth — JWT auth may not work"
+        WARN "Run setup_credentials.py to create it"
+    fi
+
     cd "$APP_DIR" || { ERR "Cannot cd to $APP_DIR"; return 1; }
 
     nohup "$bin" "$APP_MODULE" \

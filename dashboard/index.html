@@ -764,6 +764,17 @@
       </div>
     </div>
     <div class="header-right">
+      <!-- ── Auth: user chip + logout ───────────────────────── -->
+      <div class="badge teal" style="gap:8px;cursor:default" title="Signed in as">
+        <i class="fa-solid fa-user-shield" style="font-size:11px"></i>
+        <span id="user-email-display" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">—</span>
+        <span id="user-role-chip" style="font-family:var(--mono);font-size:10px;opacity:0.7">—</span>
+      </div>
+      <button class="help-btn" onclick="doLogout()" title="Sign out"
+        style="color:var(--muted);border-color:rgba(255,255,255,0.1)">
+        <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+      </button>
+      <!-- ── End auth ─────────────────────────────────────────── -->
       <div class="badge online" id="api-status">
         <div class="dot"></div>
         <span id="api-status-text">Connecting...</span>
@@ -1972,9 +1983,88 @@ function log(target, msg, type='inf') {
 }
 
 async function apiFetch(path, opts={}) {
+  const token = sessionStorage.getItem('hg_access_token');
+  if (token) {
+    opts.headers = Object.assign({}, opts.headers || {}, {
+      'Authorization': `Bearer ${token}`
+    });
+  }
+  opts.credentials = opts.credentials || 'include';
   const r = await fetch(API + path, opts);
+  if (r.status === 401) {
+    const body = await r.json().catch(() => ({}));
+    if (body?.detail?.error === 'TOKEN_EXPIRED') {
+      const refreshed = await _tryRefreshToken();
+      if (refreshed) {
+        const newToken = sessionStorage.getItem('hg_access_token');
+        opts.headers['Authorization'] = `Bearer ${newToken}`;
+        const r2 = await fetch(API + path, opts);
+        if (!r2.ok) throw new Error(`HTTP ${r2.status}: ${await r2.text()}`);
+        return r2.json();
+      }
+    }
+    _redirectToLogin();
+    throw new Error('Authentication required');
+  }
   if (!r.ok) throw new Error(`HTTP ${r.status}: ${await r.text()}`);
   return r.json();
+}
+
+async function _tryRefreshToken() {
+  try {
+    const r = await fetch(API + '/auth/refresh', {method:'POST',credentials:'include'});
+    if (!r.ok) return false;
+    const d = await r.json();
+    sessionStorage.setItem('hg_access_token', d.access_token);
+    sessionStorage.setItem('hg_role', d.role);
+    _updateUserChip(d.role);
+    return true;
+  } catch(e) { return false; }
+}
+
+function _redirectToLogin() {
+  sessionStorage.removeItem('hg_access_token');
+  sessionStorage.removeItem('hg_role');
+  window.location.replace('/login');
+}
+
+async function doLogout() {
+  try {
+    await fetch(API + '/auth/logout', {method:'POST',credentials:'include',
+      headers:{'Authorization':`Bearer ${sessionStorage.getItem('hg_access_token')||''}`}});
+  } catch(e) {}
+  _redirectToLogin();
+}
+
+function _updateUserChip(role) {
+  const chip = document.getElementById('user-role-chip');
+  if (!chip) return;
+  const colors = {superadmin:'#bf7fff',scheduler_admin:'#00ccff',
+    operator:'#00ff88',finance:'#ffaa00',viewer:'#6b7a99',collector:'#6b7a99'};
+  chip.textContent = role || 'viewer';
+  chip.style.color = colors[role] || '#6b7a99';
+}
+
+async function _initAuth() {
+  const token = sessionStorage.getItem('hg_access_token');
+  if (!token) {
+    const refreshed = await _tryRefreshToken();
+    if (!refreshed) { _redirectToLogin(); return; }
+  } else {
+    try {
+      const r = await fetch(API + '/auth/me', {
+        headers:{'Authorization':`Bearer ${token}`}, credentials:'include'});
+      if (r.ok) {
+        const me = await r.json();
+        _updateUserChip(me.role);
+        const emailEl = document.getElementById('user-email-display');
+        if (emailEl) emailEl.textContent = me.display_name || me.user_id;
+      } else if (r.status === 401) {
+        const refreshed = await _tryRefreshToken();
+        if (!refreshed) { _redirectToLogin(); return; }
+      }
+    } catch(e) {}
+  }
 }
 
 function fmt(n, dec=2) {
@@ -5534,8 +5624,11 @@ function initSavingsAndSpike() {
 //  END SAVINGS LEDGER + SPIKE WARNING
 // ═══════════════════════════════════════════════════════
 
-init();
-initSavingsAndSpike();
+(async function() {
+  await _initAuth();
+  init();
+  initSavingsAndSpike();
+})();
 initAlertsTab();
 initWeatherTab();
 initBenchmarkTab();
