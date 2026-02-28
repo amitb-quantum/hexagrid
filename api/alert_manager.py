@@ -296,6 +296,19 @@ class AlertManager:
             """, (alert_id, fired_at, event_type, level, title, message, meta_json))
             conn.commit()
 
+        # ── Incident engine hook ──────────────────────────────────────────────
+        if event_type in ("gpu_temperature", "gpu_health", "gpu_anomaly", "ecc_error"):
+            try:
+                import sys as _sys, os as _os
+                _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+                from incident_engine import IncidentEngine as _IE
+                _node = (metadata or {}).get("node_id", "unknown")
+                _gpu  = (metadata or {}).get("gpu_uuid", "")
+                _IE().handle_alert(event_type, node_id=_node, gpu_uuid=_gpu,
+                                   detail=metadata or {})
+            except Exception as _ie_err:
+                pass  # Never let incident engine crash alert delivery
+
         result = {
             "alert_id":     alert_id,
             "skipped":      False,

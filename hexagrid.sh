@@ -130,11 +130,19 @@ cmd_start() {
 
     if kill -0 "$new_pid" 2>/dev/null; then
         OK "Started — PID $new_pid"
-        # Quick health check
-        sleep 0.5
-        local http_code
-        http_code=$(curl -s -o /dev/null -w "%{http_code}" \
-            "http://localhost:${PORT}/api/v1/health" --max-time 3 2>/dev/null || echo "000")
+        # Health check with retry (TF startup can take 10-30s)
+        local http_code="000"
+        local attempts=0
+        local max_attempts=18
+        while [[ "$http_code" != "200" && $attempts -lt $max_attempts ]]; do
+            sleep 3
+            http_code=$(curl -s -o /dev/null -w "%{http_code}" \
+                "http://localhost:${PORT}/api/v1/health" --max-time 3 2>/dev/null || echo "000")
+            attempts=$((attempts + 1))
+            if [[ "$http_code" != "200" ]]; then
+                printf "  â  Waiting for startup... (%ds)\n" $((attempts * 3))
+            fi
+        done
         if [[ "$http_code" == "200" ]]; then
             OK "Health check passed (HTTP 200)"
         else

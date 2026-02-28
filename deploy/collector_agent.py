@@ -710,7 +710,9 @@ def _check_local_alerts(payload: dict) -> List[str]:
 
         # ── Power cap throttling — RL reward signal ───────────────────────
         # Not a critical alert but logged at WARNING for RL awareness
-        if gpu.get("throttle", {}).get("power_capped"):
+        # Skip if power_limit unavailable (laptop GPUs with locked TDP report N/A)
+        power_limit_available = gpu.get("power", {}).get("limit_w") is not None
+        if gpu.get("throttle", {}).get("power_capped") and power_limit_available:
             log.warning(
                 f"POWER_CAP: {name} (GPU {gpu['index']}) hitting power limit — "
                 f"RL dispatch efficiency is impacted"

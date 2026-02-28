@@ -219,6 +219,10 @@ class JobSpec(BaseModel):
     power_kw:     float = Field(..., ge=0.1, le=100.0)
     priority:     int   = Field(1, ge=1, le=2)
     deadline_min: Optional[int] = Field(None, description="Latest start slot (None=flexible)")
+    # ── Chargeback tags ───────────────────────────────────────────────────────
+    cost_center:  str   = Field("untagged", description="Cost center for chargeback reporting")
+    team:         str   = Field("untagged", description="Team owning this job")
+    project:      str   = Field("untagged", description="Project this job belongs to")
 
 
 class ScheduleRequest(BaseModel):
@@ -467,6 +471,42 @@ def _run_schedule(run_id: str, req: ScheduleRequest):
             }
 
         _set_done(run_id, results)
+
+        # ── Auto-record chargeback entries ────────────────────────────────────
+        try:
+            from chargeback_ledger import ChargebackLedger
+            _cb = ChargebackLedger()
+            # Use QAOA assignments if available, otherwise greedy
+            assignments = results.get("qaoa", results.get("greedy", {})).get("assignments", {})
+            sched_name  = "qaoa" if "qaoa" in results else "greedy"
+            for job in jobs:
+                assignment = assignments.get(job.job_id, {})
+                cost_usd   = assignment.get("cost_usd", 0)
+                price_kwh  = assignment.get("price", 0)
+                energy_kwh = (job.power_kw * job.duration_min / 60.0)
+                # Naive cost = peak price × energy
+                naive_price = float(max(prices)) if prices else price_kwh
+                naive_cost  = naive_price * energy_kwh
+                _cb.record(
+                    job_id        = str(job.job_id),
+                    job_name      = job.name,
+                    cost_center   = getattr(job, "cost_center", "untagged"),
+                    team          = getattr(job, "team",         "untagged"),
+                    project       = getattr(job, "project",      "untagged"),
+                    region        = "CAISO",
+                    node_id       = os.environ.get("NODE_ID", "unknown"),
+                    scheduler     = sched_name,
+                    duration_min  = job.duration_min,
+                    power_kw      = job.power_kw,
+                    energy_kwh    = round(energy_kwh, 4),
+                    price_per_kwh = round(price_kwh, 5),
+                    cost_usd      = round(cost_usd, 5),
+                    naive_cost_usd= round(naive_cost, 5),
+                )
+        except Exception as _cb_err:
+            import logging
+            logging.getLogger("hexagrid.chargeback").warning(
+                "Chargeback record failed: %s", _cb_err)
 
     except Exception as e:
         import traceback
@@ -1213,8 +1253,15 @@ app.include_router(weather_router)
 from patch_api_benchmark import router as benchmark_router
 app.include_router(benchmark_router)
 from telemetry_receiver import router as telemetry_router, init_telemetry_db
+from tpu_receiver import router as tpu_router, init_tpu_db
 app.include_router(telemetry_router)
+app.include_router(tpu_router)
+init_tpu_db()
 from auth_routes import router as auth_router
 app.include_router(auth_router)
+from patch_api_chargeback import router as chargeback_router
+app.include_router(chargeback_router)
+from patch_api_incidents import router as incidents_router
+app.include_router(incidents_router)
 apply_security_to_openapi(app)
 
